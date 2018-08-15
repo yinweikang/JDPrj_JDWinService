@@ -1,0 +1,304 @@
+{ 
+  "Data": {
+    "Page1": [
+      {
+        "FValidaterName": "",
+        "FInterID": "",
+        "FTranType": "",
+        "Attachments": 0,
+        "FPlanCategory": {
+          "FNumber": "STD",
+          "FName": "标准"
+        },
+        "FHeadSelfP0252": "N",
+        "FHeadSelfP0255": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FSysStatus": 2,
+        "FBrID": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FManageType": null,
+        "FPOMode": {
+          "FNumber": "PTCG",
+          "FName": "普通采购"
+        },
+        "FAreaPS": {
+          "FNumber": "1",
+          "FName": "购销"
+        },
+        "FSettleID": {
+          "FNumber": "JF02",
+          "FName": "电汇"
+        },
+        "FHeadSelfP0254": "XYSC.15003",
+        "FDeliveryPlace": "",
+        "FRelateBrID": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FExchangeRateType": {
+          "FNumber": "01",
+          "FName": "公司汇率"
+        },
+        "FPOStyle": {
+          "FNumber": "PO02",
+          "FName": "赊购"
+        },
+        "FSettleDate": "2014-12-13 00:00:00",
+        "FConsignee": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FPOOrdBillNo": "",
+        "FSupplyID": {
+          "FNumber": "XYSC.15003",
+          "FName": "昆山市长荣五金厂"
+        },
+        "FExplanation": "",
+        "FCurrencyID": {
+          "FNumber": "RMB",
+          "FName": "人民币"
+        },
+        "Fdate": "2014-12-13 00:00:00",
+        "FExchangeRate": 1.0,
+        "FChangeDate": null,
+        "FVersionNo": "000",
+        "FChangeMark": 0,
+        "FChangeUser": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FChangeCauses": "",
+        "FMultiCheckStatus": "16",
+        "FCheckerID": {
+          "FNumber": "ada.zhang",
+          "FName": "ada.zhang"
+        },
+        "FCheckDate": "2015-01-04 00:00:00",
+        "FMangerID": {
+          "FNumber": "1812",
+          "FName": "杨丽桃"
+        },
+        "FDeptID": {
+          "FNumber": "D40.1",
+          "FName": "仓管"
+        },
+        "FEmpID": {
+          "FNumber": "2573",
+          "FName": "韩海元"
+        },
+        "FBillerID": {
+          "FNumber": "haiyuan.han",
+          "FName": "haiyuan.han"
+        },
+        "FCancellation": false,
+        "FClassTypeID": 0,
+        "FEnterpriseID": 0,
+        "FSendStatus": 0,
+        "FStatus": 3,
+        "FNumber": ""
+      }
+    ],
+    "Page2": [
+      {
+        "FEntrySelfP0266": 0.1282100000,
+        "FEntrySelfP0267": null,
+        "FEntrySelfP0268": null,
+        "FEntrySelfP0272": 0.1282100000,
+        "FEntrySelfP0273": null,
+        "FEntrySelfP0275": null,
+        "FOutSourceEntryID": 0,
+        "FOutSourceInterID": 0,
+        "FOutSourceTranType": 0,
+        "FMapName": "",
+        "FItemName": "螺丝",
+        "FItemModel": "STEEL NICKEL PLATED #4-40 UNC L=38mm 小E MFG:CHANGRONG",
+        "FBaseUnit": "PCS",
+        "FQty": 5000.0000000000,
+        "FAuxQty": 5000.0000000000,
+        "FSecUnitID": null,
+        "FSecCoefficient": 0.0000000000,
+        "FSecQty": 0.0000000000,
+        "Fauxprice": 0.1282100000,
+        "FAuxTaxPrice": 0.1500100000,
+        "FAmount": 641.05,
+        "FTaxRate": 0.0000000000,
+        "FAuxPriceDiscount": 0.1500100000,
+        "FDescount": 0.0000000000,
+        "FCess": 17.00,
+        "FTaxAmount": 108.98,
+        "FAllAmount": 750.0300,
+        "Fdate1": "2015-02-23 00:00:00",
+        "FCommitQty": 5000.0000000000,
+        "FAuxCommitQty": 5000.0000000000,
+        "FSecCommitQty": 0.0000000000,
+        "FStockQty": 5000.0000000000,
+        "FSecStockQty": 0.0000000000,
+        "FAuxStockQty": 5000.0000000000,
+        "FSourceBillNo": "",
+        "FSourceTranType": 0,
+        "FEntryAccessoryCount": 0,
+        "FSourceInterId": 0,
+        "FSourceEntryID": 0,
+        "FRefuseNote": "",
+        "FContractBillNo": "",
+        "FRejectRefuseNote": "",
+        "FContractInterID": 0,
+        "FSupConDate": null,
+        "FContractEntryID": 0,
+        "FSupConFetchDate": null,
+        "FAuxQtyInvoice": 5000.0000000000,
+        "FSecInvoiceQty": 0.0000000000,
+        "FQtyInvoice": 5000.0000000000,
+        "FSupConMem": null,
+        "FAuxPropCls": 0,
+        "FSupConQty": null,
+        "FMrpLockFlag": 0,
+        "FReceiveAmountFor_Commit": 750.0500,
+        "FMTONo": "",
+        "FDetailID2": 56,
+        "FInterID2": 22382,
+        "FEntryID2": 1,
+        "FEntrySelfP0245": "CHANGRONG",
+        "FEntrySelfP0246": null,
+        "FEntrySelfP0274": "承认",
+        "FEntrySelfP0276": null,
+        "FEntrySelfP0279": null,
+        "FEntrySelfP0280": 17.0,
+        "FSupConfirm": null,
+        "FMapNumber": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FItemID": {
+          "FNumber": "C.E3C21100L",
+          "FName": "螺丝"
+        },
+        "FAuxPropID": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FUnitID": {
+          "FNumber": "S01",
+          "FName": "PCS"
+        },
+        "Fnote": "原单号:ORD14-10-2210  迪堡",
+        "FSupConfirmor": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FPlanMode": {
+          "FNumber": "MTS",
+          "FName": "MTS计划模式"
+        },
+        "FIsCheck": 0,
+        "FCheckMethod": {
+          "FNumber": "MJ",
+          "FName": "免检"
+        },
+        "FNumber": ""
+      },
+      {
+        "FEntrySelfP0266": 0.1111000000,
+        "FEntrySelfP0267": null,
+        "FEntrySelfP0268": null,
+        "FEntrySelfP0272": 0.1111000000,
+        "FEntrySelfP0273": null,
+        "FEntrySelfP0275": null,
+        "FOutSourceEntryID": 0,
+        "FOutSourceInterID": 0,
+        "FOutSourceTranType": 0,
+        "FMapName": "",
+        "FItemName": "螺丝",
+        "FItemModel": "STEEL NICKEL PLATED #4-40 UNC L=47mm 大E MFG:CHANGRONG",
+        "FBaseUnit": "PCS",
+        "FQty": 10000.0000000000,
+        "FAuxQty": 10000.0000000000,
+        "FSecUnitID": null,
+        "FSecCoefficient": 0.0000000000,
+        "FSecQty": 0.0000000000,
+        "Fauxprice": 0.1111000000,
+        "FAuxTaxPrice": 0.1299900000,
+        "FAmount": 1111.00,
+        "FTaxRate": 0.0000000000,
+        "FAuxPriceDiscount": 0.1299900000,
+        "FDescount": 0.0000000000,
+        "FCess": 17.00,
+        "FTaxAmount": 188.88,
+        "FAllAmount": 1299.8751,
+        "Fdate1": "2015-01-01 00:00:00",
+        "FCommitQty": 10000.0000000000,
+        "FAuxCommitQty": 10000.0000000000,
+        "FSecCommitQty": 0.0000000000,
+        "FStockQty": 10000.0000000000,
+        "FSecStockQty": 0.0000000000,
+        "FAuxStockQty": 10000.0000000000,
+        "FSourceBillNo": "",
+        "FSourceTranType": 0,
+        "FEntryAccessoryCount": 0,
+        "FSourceInterId": 0,
+        "FSourceEntryID": 0,
+        "FRefuseNote": "",
+        "FContractBillNo": "",
+        "FRejectRefuseNote": "",
+        "FContractInterID": 0,
+        "FSupConDate": null,
+        "FContractEntryID": 0,
+        "FSupConFetchDate": null,
+        "FAuxQtyInvoice": 10000.0000000000,
+        "FSecInvoiceQty": 0.0000000000,
+        "FQtyInvoice": 10000.0000000000,
+        "FSupConMem": null,
+        "FAuxPropCls": 0,
+        "FSupConQty": null,
+        "FMrpLockFlag": 0,
+        "FReceiveAmountFor_Commit": 1299.9000,
+        "FMTONo": "",
+        "FDetailID2": 55,
+        "FInterID2": 22382,
+        "FEntryID2": 5,
+        "FEntrySelfP0245": "CHANGRONG",
+        "FEntrySelfP0246": null,
+        "FEntrySelfP0274": "承认",
+        "FEntrySelfP0276": 0.0,
+        "FEntrySelfP0279": null,
+        "FEntrySelfP0280": 21.0,
+        "FSupConfirm": null,
+        "FMapNumber": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FItemID": {
+          "FNumber": "C.E3921100L",
+          "FName": "螺丝"
+        },
+        "FAuxPropID": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FUnitID": {
+          "FNumber": "S01",
+          "FName": "PCS"
+        },
+        "Fnote": "原单号:ORD14-12-0527  依视路",
+        "FSupConfirmor": {
+          "FNumber": "",
+          "FName": ""
+        },
+        "FPlanMode": {
+          "FNumber": "MTS",
+          "FName": "MTS计划模式"
+        },
+        "FIsCheck": 0,
+        "FCheckMethod": {
+          "FNumber": "MJ",
+          "FName": "免检"
+        },
+        "FNumber": ""
+      }
+    ]
+  }
+}

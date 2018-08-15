@@ -1,0 +1,243 @@
+{
+    "Data": {
+        "Page1": [
+            {
+			    "FDate":"2017-09-07",
+                "FValidaterName": "",
+                "FTranType": 81,
+                "FPlanCategory": {
+                    "FNumber": "STD",
+                    "FName": "标准"
+                },
+                "FHeadSelfS0156": "2017-10-21",
+                "FHeadSelfS0157": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FManageType": null,
+                "FImport": 0,
+                "FPOOrdBillNo": "",
+                "FConsignee": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FHeadSelfS0161": "广东省东莞市谢岗镇大龙村华泰科技园A区A栋",
+                "FCustID": {
+                    "FNumber": "XYC032-128",
+                    "FName": "东莞广原电子有限公司"
+                },
+                "FSettleDate": "2014-09-1600: 00: 00",
+                "FSysStatus": 2,
+                "FHeadSelfS0160": null,
+                "FHeadSelfS0153": "XYC032-128",
+                "FBillNo": "",
+                "FAreaPS": {
+                    "FNumber": "1",
+                    "FName": "购销"
+                },
+                "FSettleID": {
+                    "FNumber": "JF02",
+                    "FName": "电汇"
+                },
+                "FRelateBrID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FHeadSelfS0140": {
+                    "FNumber": "40010",
+                    "FName": "普通订单"
+                },
+                "FSaleStyle": {
+                    "FNumber": "FXF02",
+                    "FName": "赊销"
+                },
+                "FHeadSelfS0154": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FTransitAheadTime": 0,
+                "FBrID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FExchangeRateType": {
+                    "FNumber": "01",
+                    "FName": "公司汇率"
+                },
+                "FFetchStyle": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FFetchAdd": "",
+                "FExplanation": "",
+                "FCurrencyID": {
+                    "FNumber": "RMB",
+                    "FName": "人民币"
+                },
+                "FExchangeRate": 1,
+                "FVersionNo": "000",
+                "FChangeMark": 0,
+                "FChangeDate": null,
+                "FChangeUser": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FChangeCauses": "",
+                "FCheckerID": {
+                    "FNumber": "iris",
+                    "FName": "iris"
+                },
+                "FCheckDate": "2015-01-0300: 00: 00",
+                "FDeptID": {
+                    "FNumber": "D20",
+                    "FName": "计划部"
+                },
+                "FEmpID": {
+                    "FNumber": "2747",
+                    "FName": "李文娟"
+                },
+                "FMangerID": {
+                    "FNumber": "1766",
+                    "FName": "庄嫣红"
+                },
+                "FBillerID": {
+                    "FNumber": "sweet.li",
+                    "FName": "sweet.li"
+                },
+                "FCustAddress": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FCancellation": false,
+                "FClassTypeID": 0,
+                "FEnterpriseID": 0,
+                "FSendStatus": 0,
+                "FStatus": 3,
+                "FNumber": ""
+            }
+        ],
+        "Page2": [
+            {
+                "FEntrySelfS0153": "20140900167",
+                "FEntrySelfS0154": "2014-12-0500: 00: 00",
+                "FEntrySelfS0155": "2014-11-0500: 00: 00",
+                "FEntrySelfS0161": null,
+                "FEntrySelfS0162": null,
+                "FEntrySelfS0171": "2015-07-24",
+                "FEntrySelfS0174": "2014-12-3000: 00: 00",
+                "FEntrySelfS0177": null,
+                "FEntrySelfS0183": null,
+                "FEntrySelfS0184": null,
+                "FOutSourceEntryID": 0,
+                "FOutSourceInterID": 0,
+                "FOutSourceTranType": 0,
+                "FMapName": "",
+                "FItemName": "CABLEASSY",
+                "FItemModel": "670-0034-46(REV: J)",
+                "FBaseUnit": "PCS",
+                "FQty": 3500,
+                "Fauxqty": 3500,
+                "FSecUnitID": null,
+                "FSecCoefficient": 0,
+                "FSecQty": 0,
+                "Fauxprice": 9.46,
+                "FAuxTaxPrice": 11.0682,
+                "Famount": 33110,
+                "FCess": 17,
+                "FTaxRate": 0,
+                "FUniDiscount": 0,
+                "FTaxAmount": 0,
+                "FAuxPriceDiscount": 11.0682,
+                "FTaxAmt": 5628.7,
+                "FAllAmount": 38738.7,
+                "FTranLeadTime": 0,
+                "FDate1": "2014-11-0500: 00: 00",
+                "FCommitQty": 3500,
+                "FAuxCommitQty": 3500,
+                "FSecCommitQty": 0,
+                "FSecStockQty": 0,
+                "FStockQty": 3500,
+                "FAuxStockQty": 3500,
+                "FMTONo": "",
+                "FLockFlag": 0,
+                "FSourceBillNo": "",
+                "FSourceTranType": 0,
+                "FOrderBOMInterID": 0,
+                "FSourceInterId": 0,
+                "FSourceEntryID": 0,
+                "FContractBillNo": "",
+                "FContractInterID": 0,
+                "FContractEntryID": 0,
+                "FAuxQtyInvoice": 3500,
+                "FSecInvoiceQty": 0,
+                "FQtyInvoice": 3500,
+                "FSecCommitInstall": 0,
+                "FCommitInstall": 0,
+                "FAuxCommitInstall": 0,
+                "FAuxPropCls": 0,
+                "FAllStdAmount": 38738.7,
+                "FMrpLockFlag": 0,
+                "FHaveMrp": 1,
+                "FReceiveAmountFor_Commit": 38738.7,
+                "FOrderBillNo": "",
+                "FOrderEntryID": 0,
+                "FDetailID2": 68,
+                "FInterID2": 13352,
+                "FEntryID2": 1,
+                "FEntrySelfS0168": null,
+                "FEntrySelfS0169": 1,
+                "FEntrySelfS0170": 1,
+                "FEntrySelfS0172": "线束",
+                "FEntrySelfS0173": 105,
+                "FEntrySelfS0175": null,
+                "FEntrySelfS0176": 2000,
+                "FATPDeduct": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FMapNumber": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FItemID": {
+                    "FNumber": "5.B2-1116",
+                    "FName": "CABLEASSY"
+                },
+                "FAuxPropID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FUnitID": {
+                    "FNumber": "S01",
+                    "FName": "PCS"
+                },
+                "FInForecast": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "Fnote": "",
+                "FPlanMode": {
+                    "FNumber": "MTS",
+                    "FName": "MTS计划模式"
+                },
+                "FBomInterID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FCostObjectID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FBOMCategory": {
+                    "FNumber": "BZBOM",
+                    "FName": "标准BOM"
+                },
+                "FOrderBOMStatus": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FNumber": ""
+            }
+        ]
+    }
+}

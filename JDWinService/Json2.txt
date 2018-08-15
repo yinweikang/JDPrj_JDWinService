@@ -1,0 +1,305 @@
+{
+    "Data": {
+        "Page1": [
+            {
+                "FCancellation": "",
+                "FClassTypeID": "",
+                "FEnterpriseID": "",
+                "FHeadSelfP0252": "N",
+                "FHeadSelfP0254": "",
+                "FHeadSelfP0255": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FSendStatus": "",
+                "FStatus": "",
+                "Fdate": "0001-01-01",
+                "FAreaPS": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FSettleID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FBrID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FPOStyle": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FRelateBrID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FSettleDate": "",
+                "FSupplyID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FPOOrdBillNo": "",
+                "FExplanation": "",
+                "FTranType": "",
+                "FCurrencyID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FSelTranType": "",
+                "FSelBillNo": "",
+                "FExchangeRate": null,
+                "FBillNo": "",
+                "FMultiCheckStatus": "16",
+                "FDeliveryPlace": "",
+                "Attachments": "",
+                "FPlanCategory": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FExchangeRateType": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FPOMode": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FCheckerID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FCheckDate": "",
+                "FMangerID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FDeptID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FEmpID": {
+                    "FNumber": null,
+                    "FName": null
+                },
+                "FBillerID": {
+                    "FNumber": "Sr.Sun",
+                    "FName": "Sr.Sun"
+                },
+                "FManageType": "",
+                "FConsignee": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FSysStatus": "2",
+                "FValidaterName": "",
+                "FVersionNo": null,
+                "FChangeDate": "",
+                "FChangeUser": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FChangeCauses": "",
+                "FChangeMark": ""
+            }
+        ],
+        "Page2": [
+            {
+                "FEntryID2": "",
+                "FEntrySelfP0245": "",
+                "FEntrySelfP0246": "",
+                "FEntrySelfP0266": "",
+                "FEntrySelfP0267": "",
+                "FEntrySelfP0268": "",
+                "FEntrySelfP0272": "",
+                "FEntrySelfP0273": "",
+                "FEntrySelfP0274": "",
+                "FEntrySelfP0275": "",
+                "FEntrySelfP0276": "",
+                "FEntrySelfP0277": null,
+                "FEntrySelfP0278": null,
+                "FEntrySelfP0279": "",
+                "FEntrySelfP0280": "",
+                "FEntrySelfP0285": null,
+                "FIsCheck": "",
+                "FCheckMethod": {
+                    "FNumber": "MJ",
+                    "FName": "免检"
+                },
+                "FOutSourceEntryID": "",
+                "FOutSourceInterID": "",
+                "FOutSourceTranType": "",
+                "FMapNumber": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FMapName": "",
+                "FItemID": {
+                    "FNumber": "B.A000372AA",
+                    "FName": "WIRE"
+                },
+                "FItemName": "WIRE",
+                "FItemModel": "SAE J1128 SXL TYPE 10AWG(19/0.57B) OD:5.1±0.2MM COLOR:RED MFG:寰宇",
+                "FAuxPropID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FBaseUnit": "M",
+                "FQty": "196.000000",
+                "FUnitID": {
+                    "FNumber": "L01",
+                    "FName": "M"
+                },
+                "FAuxQty": "196.000000",
+                "FSecUnitID": "",
+                "FSecCoefficient": "",
+                "FSecQty": "",
+                "Fauxprice": "12.000000",
+                "FAuxTaxPrice": "",
+                "FAmount": "2352.000000",
+                "FTaxRate": "",
+                "FAuxPriceDiscount": "",
+                "FDescount": "",
+                "FCess": "17.00",
+                "FTaxAmount": "",
+                "FAllAmount": "",
+                "Fdate1": "2017-10-10",
+                "Fnote": "",
+                "FCommitQty": "",
+                "FAuxCommitQty": "",
+                "FSecCommitQty": "",
+                "FStockQty": "",
+                "FSecStockQty": "",
+                "FAuxStockQty": "",
+                "FSourceBillNo": "",
+                "FSourceTranType": "",
+                "FEntryAccessoryCount": "",
+                "FSourceInterId": "",
+                "FSourceEntryID": "",
+                "FRefuseNote": "",
+                "FContractBillNo": "",
+                "FRejectRefuseNote": "",
+                "FContractInterID": "",
+                "FSupConDate": "",
+                "FContractEntryID": "",
+                "FSupConFetchDate": "",
+                "FAuxQtyInvoice": "",
+                "FSupConfirm": "",
+                "FSecInvoiceQty": "",
+                "FSupConfirmor": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FQtyInvoice": "",
+                "FSupConMem": "",
+                "FAuxPropCls": "",
+                "FSupConQty": "",
+                "FMrpLockFlag": "",
+                "FReceiveAmountFor_Commit": "",
+                "FPlanMode": {
+                    "FNumber": "MTS计划模式",
+                    "FName": "MTS计划模式"
+                },
+                "FMTONo": ""
+            },
+            {
+                "FEntryID2": "",
+                "FEntrySelfP0245": "",
+                "FEntrySelfP0246": "",
+                "FEntrySelfP0266": "",
+                "FEntrySelfP0267": "",
+                "FEntrySelfP0268": "",
+                "FEntrySelfP0272": "",
+                "FEntrySelfP0273": "",
+                "FEntrySelfP0274": "",
+                "FEntrySelfP0275": "",
+                "FEntrySelfP0276": "",
+                "FEntrySelfP0277": null,
+                "FEntrySelfP0278": null,
+                "FEntrySelfP0279": "",
+                "FEntrySelfP0280": "",
+                "FEntrySelfP0285": null,
+                "FIsCheck": "",
+                "FCheckMethod": {
+                    "FNumber": "MJ",
+                    "FName": "免检"
+                },
+                "FOutSourceEntryID": "",
+                "FOutSourceInterID": "",
+                "FOutSourceTranType": "",
+                "FMapNumber": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FMapName": "",
+                "FItemID": {
+                    "FNumber": "B.A0000648F",
+                    "FName": "WIRE"
+                },
+                "FItemName": "WIRE",
+                "FItemModel": "UL1007 18AWG(41/0.16T) OD:2.0MM 增加-40度耐温要求 COLOR:RED P/N:HT1704981-RED MFG:HWATEK",
+                "FAuxPropID": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FBaseUnit": "M",
+                "FQty": "310.000000",
+                "FUnitID": {
+                    "FNumber": "L01",
+                    "FName": "M"
+                },
+                "FAuxQty": "310.000000",
+                "FSecUnitID": "",
+                "FSecCoefficient": "",
+                "FSecQty": "",
+                "Fauxprice": "12.000000",
+                "FAuxTaxPrice": "",
+                "FAmount": "3720.000000",
+                "FTaxRate": "",
+                "FAuxPriceDiscount": "",
+                "FDescount": "",
+                "FCess": "17.00",
+                "FTaxAmount": "",
+                "FAllAmount": "",
+                "Fdate1": "2017-10-10",
+                "Fnote": "",
+                "FCommitQty": "",
+                "FAuxCommitQty": "",
+                "FSecCommitQty": "",
+                "FStockQty": "",
+                "FSecStockQty": "",
+                "FAuxStockQty": "",
+                "FSourceBillNo": "",
+                "FSourceTranType": "",
+                "FEntryAccessoryCount": "",
+                "FSourceInterId": "",
+                "FSourceEntryID": "",
+                "FRefuseNote": "",
+                "FContractBillNo": "",
+                "FRejectRefuseNote": "",
+                "FContractInterID": "",
+                "FSupConDate": "",
+                "FContractEntryID": "",
+                "FSupConFetchDate": "",
+                "FAuxQtyInvoice": "",
+                "FSupConfirm": "",
+                "FSecInvoiceQty": "",
+                "FSupConfirmor": {
+                    "FNumber": "",
+                    "FName": ""
+                },
+                "FQtyInvoice": "",
+                "FSupConMem": "",
+                "FAuxPropCls": "",
+                "FSupConQty": "",
+                "FMrpLockFlag": "",
+                "FReceiveAmountFor_Commit": "",
+                "FPlanMode": {
+                    "FNumber": "MTS计划模式",
+                    "FName": "MTS计划模式"
+                },
+                "FMTONo": ""
+            }
+        ]
+    }
+}
