@@ -16,25 +16,46 @@ namespace JDWinService.Dal
     {
         public static string connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["ConnectionString"].Value; //连接信息
         Common common = new Common();
-        /// <summary>
-        /// 对象JD_CuPriceDetail明细
-        /// 编写人：ywk
-        /// 编写日期：2018/7/20 星期五
-        /// </summary>
-        public JD_CuPriceDetail Detail(int ItemID)
+        public bool IsExist(string SupplierCode, string ItemCode, decimal BeginCuPrice, decimal EndCuPrice, int FromCount, int EndCount)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_CuPriceDetail WHERE ItemID = @m_ItemID", con);
+            SqlCommand cmd = new SqlCommand("SELECT COUNT(1) FROM JD_CuPriceDetail WHERE SupplierCode = @m_SupplierCode and ItemCode=@m_ItemCode and BeginCuPrice=@m_BeginCuPrice  and EndCuPrice=@m_EndCuPrice and FromCount=@m_FromCount and EndCount=@m_EndCount", con);
+            con.Open();
+            cmd.Parameters.Add(new SqlParameter("@m_SupplierCode", SqlDbType.VarChar, 50)).Value = SupplierCode;
+            cmd.Parameters.Add(new SqlParameter("@m_ItemCode", SqlDbType.VarChar, 50)).Value = ItemCode;
+            cmd.Parameters.Add(new SqlParameter("@m_BeginCuPrice", SqlDbType.Decimal, 18)).Value = BeginCuPrice;
+            cmd.Parameters.Add(new SqlParameter("@m_EndCuPrice", SqlDbType.Decimal, 18)).Value = EndCuPrice;
+            cmd.Parameters.Add(new SqlParameter("@m_FromCount", SqlDbType.Int, 0)).Value = FromCount;
+            cmd.Parameters.Add(new SqlParameter("@m_EndCount", SqlDbType.Int, 0)).Value = EndCount;
+            bool b = false;
+            try
+            {
+                int count = Int32.Parse(cmd.ExecuteScalar().ToString());
+                if (count > 0) b = true;
+            }
+            catch (Exception e) { throw new Exception(e.ToString()); }
+            cmd.Dispose();
+            con.Close();
+            con.Dispose();
+            return b;
+        }
+
+        public JD_CuPriceDetail Detail(string SupplierCode, string ItemCode, decimal BeginCuPrice, decimal EndCuPrice, int FromCount, int EndCount)
+        {
+            SqlConnection con = new SqlConnection(connectionString);
+            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_CuPriceDetail  WHERE SupplierCode = @m_SupplierCode and ItemCode=@m_ItemCode and BeginCuPrice=@m_BeginCuPrice  and EndCuPrice=@m_EndCuPrice and FromCount=@m_FromCount and EndCount=@m_EndCount", con);
             con.Open();
 
-
-            cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = ItemID;
-
+            cmd.Parameters.Add(new SqlParameter("@m_SupplierCode", SqlDbType.VarChar, 50)).Value = SupplierCode;
+            cmd.Parameters.Add(new SqlParameter("@m_ItemCode", SqlDbType.VarChar, 50)).Value = ItemCode;
+            cmd.Parameters.Add(new SqlParameter("@m_BeginCuPrice", SqlDbType.Decimal, 18)).Value = BeginCuPrice;
+            cmd.Parameters.Add(new SqlParameter("@m_EndCuPrice", SqlDbType.Decimal, 18)).Value = EndCuPrice;
+            cmd.Parameters.Add(new SqlParameter("@m_FromCount", SqlDbType.Int, 0)).Value = FromCount;
+            cmd.Parameters.Add(new SqlParameter("@m_EndCount", SqlDbType.Int, 0)).Value = EndCount;
             JD_CuPriceDetail myDetail = new JD_CuPriceDetail();
             SqlDataReader myReader = cmd.ExecuteReader();
             if (myReader.Read())
             {
-
 
                 if (!Convert.IsDBNull(myReader["ItemID"])) { myDetail.ItemID = Convert.ToInt32(myReader["ItemID"]); }
                 if (!Convert.IsDBNull(myReader["CreateTime"])) { myDetail.CreateTime = Convert.ToDateTime(myReader["CreateTime"]); }
@@ -58,6 +79,8 @@ namespace JDWinService.Dal
                 if (!Convert.IsDBNull(myReader["PackageInfo"])) { myDetail.PackageInfo = Convert.ToString(myReader["PackageInfo"]); }
                 if (!Convert.IsDBNull(myReader["CostPrice"])) { myDetail.CostPrice = Convert.ToDecimal(myReader["CostPrice"]); }
                 if (!Convert.IsDBNull(myReader["CostCoinType"])) { myDetail.CostCoinType = Convert.ToString(myReader["CostCoinType"]); }
+                if (!Convert.IsDBNull(myReader["EffectiveDate"])) { myDetail.EffectiveDate = Convert.ToDateTime(myReader["EffectiveDate"]); }
+                if (!Convert.IsDBNull(myReader["PriceRemarks"])) { myDetail.PriceRemarks = Convert.ToString(myReader["PriceRemarks"]); }
             }
 
             myReader.Close();
@@ -69,20 +92,16 @@ namespace JDWinService.Dal
         }
 
 
-        public JD_CuPriceDetail Detail(string SupplierCode, string ItemCode)
+        public JD_CuPriceDetail Detail(int ItemID)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_CuPriceDetail WHERE SupplierCode=@m_SupplierCode and ItemCode=@m_ItemCode", con);
+            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_CuPriceDetail  WHERE ItemID = @m_ItemID", con);
             con.Open();
-
-
-            cmd.Parameters.Add(new SqlParameter("@m_SupplierCode", SqlDbType.NVarChar, 50)).Value = SupplierCode;
-            cmd.Parameters.Add(new SqlParameter("@m_ItemCode", SqlDbType.NVarChar, 50)).Value = ItemCode;
+            cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = ItemID;
             JD_CuPriceDetail myDetail = new JD_CuPriceDetail();
             SqlDataReader myReader = cmd.ExecuteReader();
             if (myReader.Read())
             {
-
 
                 if (!Convert.IsDBNull(myReader["ItemID"])) { myDetail.ItemID = Convert.ToInt32(myReader["ItemID"]); }
                 if (!Convert.IsDBNull(myReader["CreateTime"])) { myDetail.CreateTime = Convert.ToDateTime(myReader["CreateTime"]); }
@@ -106,6 +125,8 @@ namespace JDWinService.Dal
                 if (!Convert.IsDBNull(myReader["PackageInfo"])) { myDetail.PackageInfo = Convert.ToString(myReader["PackageInfo"]); }
                 if (!Convert.IsDBNull(myReader["CostPrice"])) { myDetail.CostPrice = Convert.ToDecimal(myReader["CostPrice"]); }
                 if (!Convert.IsDBNull(myReader["CostCoinType"])) { myDetail.CostCoinType = Convert.ToString(myReader["CostCoinType"]); }
+                if (!Convert.IsDBNull(myReader["EffectiveDate"])) { myDetail.EffectiveDate = Convert.ToDateTime(myReader["EffectiveDate"]); }
+                if (!Convert.IsDBNull(myReader["PriceRemarks"])) { myDetail.PriceRemarks = Convert.ToString(myReader["PriceRemarks"]); }
             }
 
             myReader.Close();
@@ -124,10 +145,10 @@ namespace JDWinService.Dal
         public int Add(JD_CuPriceDetail model)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("INSERT INTO JD_CuPriceDetail(CreateTime,Operater,SupplierName,SupplierCode,BeginCuPrice,EndCuPrice,ItemName,ItemCode,FModel,FromCount,EndCount,Price,FUnit,CoinType,MOQ,PPQ,LimitTimes,IsDeleted,PackageInfo,CostPrice,CostCoinType) VALUES(@m_CreateTime,@m_Operater,@m_SupplierName,@m_SupplierCode,@m_BeginCuPrice,@m_EndCuPrice,@m_ItemName,@m_ItemCode,@m_FModel,@m_FromCount,@m_EndCount,@m_Price,@m_FUnit,@m_CoinType,@m_MOQ,@m_PPQ,@m_LimitTimes,@m_IsDeleted,@m_PackageInfo,@m_CostPrice,@m_CostCoinType) SELECT @thisId=@@IDENTITY FROM JD_CuPriceDetail", con);
+            SqlCommand cmd = new SqlCommand("INSERT INTO JD_CuPriceDetail(CreateTime,Operater,SupplierName,SupplierCode,BeginCuPrice,EndCuPrice,ItemName,ItemCode,FModel,FromCount,EndCount,Price,FUnit,CoinType,MOQ,PPQ,LimitTimes,IsDeleted,PackageInfo,CostPrice,CostCoinType,EffectiveDate,PriceRemarks) VALUES(@m_CreateTime,@m_Operater,@m_SupplierName,@m_SupplierCode,@m_BeginCuPrice,@m_EndCuPrice,@m_ItemName,@m_ItemCode,@m_FModel,@m_FromCount,@m_EndCount,@m_Price,@m_FUnit,@m_CoinType,@m_MOQ,@m_PPQ,@m_LimitTimes,@m_IsDeleted,@m_PackageInfo,@m_CostPrice,@m_CostCoinType,@m_EffectiveDate,@m_PriceRemarks) SELECT @thisId=@@IDENTITY FROM JD_CuPriceDetail", con);
             con.Open();
 
-            if (model.CreateTime == new DateTime())
+            if (model.CreateTime == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }
@@ -295,6 +316,23 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CostCoinType", SqlDbType.NVarChar, 50)).Value = model.CostCoinType;
             }
+            if (model.EffectiveDate == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = model.EffectiveDate;
+            }
+            if (model.PriceRemarks == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar, 100)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar, 100)).Value = model.PriceRemarks;
+            }
+
             //输出参数
             SqlParameter returnParam = cmd.Parameters.Add(new SqlParameter("@thisId", SqlDbType.Int));
             returnParam.Direction = ParameterDirection.Output;
@@ -322,10 +360,10 @@ namespace JDWinService.Dal
         public void Update(JD_CuPriceDetail model)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("UPDATE JD_CuPriceDetail SET CreateTime = @m_CreateTime,Operater = @m_Operater,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BeginCuPrice = @m_BeginCuPrice,EndCuPrice = @m_EndCuPrice,ItemName = @m_ItemName,ItemCode = @m_ItemCode,FModel = @m_FModel,FromCount = @m_FromCount,EndCount = @m_EndCount,Price = @m_Price,FUnit = @m_FUnit,CoinType = @m_CoinType,MOQ = @m_MOQ,PPQ = @m_PPQ,LimitTimes = @m_LimitTimes,IsDeleted = @m_IsDeleted,PackageInfo = @m_PackageInfo,CostPrice = @m_CostPrice,CostCoinType = @m_CostCoinType WHERE ItemID = @m_ItemID", con);
+            SqlCommand cmd = new SqlCommand("UPDATE JD_CuPriceDetail SET CreateTime = @m_CreateTime,Operater = @m_Operater,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BeginCuPrice = @m_BeginCuPrice,EndCuPrice = @m_EndCuPrice,ItemName = @m_ItemName,ItemCode = @m_ItemCode,FModel = @m_FModel,FromCount = @m_FromCount,EndCount = @m_EndCount,Price = @m_Price,FUnit = @m_FUnit,CoinType = @m_CoinType,MOQ = @m_MOQ,PPQ = @m_PPQ,LimitTimes = @m_LimitTimes,IsDeleted = @m_IsDeleted,PackageInfo = @m_PackageInfo,CostPrice = @m_CostPrice,CostCoinType = @m_CostCoinType,EffectiveDate = @m_EffectiveDate,PriceRemarks=@m_PriceRemarks WHERE ItemID = @m_ItemID", con);
             con.Open();
 
-            if (model.CreateTime == new DateTime())
+            if (model.CreateTime == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }
@@ -493,7 +531,24 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CostCoinType", SqlDbType.NVarChar, 50)).Value = model.CostCoinType;
             }
+            if (model.EffectiveDate == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = model.EffectiveDate;
+            }
+            if (model.PriceRemarks == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar, 100)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar, 100)).Value = model.PriceRemarks;
+            }
             cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = model.ItemID;
+
             try { cmd.ExecuteNonQuery(); }
             catch (Exception e) { throw new Exception(e.ToString()); }
             cmd.Dispose();
@@ -507,74 +562,119 @@ namespace JDWinService.Dal
         /// </summary>
         /// <param name="ItemID"></param>
         /// JD_LimitPriceApply 数据 更新至JD_CuPriceDetail中
-        public void HandleCuPrice(int ItemID,string FileName)
+        public void HandleCuPrice(int ItemID, string FileName, int TaskID)
         {
-          
+
             JD_LimitPriceApply_LogDal logdal = new JD_LimitPriceApply_LogDal();
             JD_LimitPriceApply_Log Logmodel = logdal.Detail(ItemID);
 
             JD_CuPriceDetailDal detaildal = new JD_CuPriceDetailDal();
             JD_CuPriceDetail detailmodel = new JD_CuPriceDetail();
-
+            string ErrorMsg = string.Empty;
             int CuPriceID = 0;
             try
             {
                 if (Logmodel != null)
                 {
+                    #region 本地集成
                     switch (Logmodel.ApplyType)
                     {
                         case "1": //新增
                             #region 新增
-                            CuPriceID= detaildal.Add(new JD_CuPriceDetail
+                            //判断是否存在 若存在 更新单价 
+
+                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode, Logmodel.BeginCuPrice, Logmodel.EndCuPrice, Logmodel.FromCount, Logmodel.EndCount);
+
+                            if (detailmodel != null && !string.IsNullOrEmpty(detailmodel.SupplierCode))
                             {
-                                ItemName = Logmodel.ItemName,
-                                ItemCode = Logmodel.ItemCode,
-                                FUnit = Logmodel.FUnit,
-                                BeginCuPrice = Logmodel.BeginCuPrice,
-                                EndCuPrice = Logmodel.EndCuPrice,
-                                FromCount = Logmodel.FromCount,
-                                EndCount = Logmodel.EndCount,
-                                SupplierName = Logmodel.SupplierName,
-                                SupplierCode = Logmodel.SupplierCode,
-                                CoinType = Logmodel.CoinType,
-                                Price = Logmodel.Price,
-                                MOQ = Logmodel.MOQ,
-                                PPQ = Logmodel.PPQ,
-                                LimitTimes = Logmodel.LimitTimes,
-                                FModel = Logmodel.FModel,
-                                CreateTime = DateTime.Now,
-                                Operater = Logmodel.Operater,
-                                PackageInfo= Logmodel.PackageInfo,
-                                CostPrice=Logmodel.CostPrice,
-                                CostCoinType=Logmodel.CostCoinType 
-                            });
-                            Logmodel.ParentID = CuPriceID;
+                                detailmodel.Price = Logmodel.Price;
+                                detailmodel.PriceRemarks = Logmodel.PriceRemarks;
+                                detailmodel.EffectiveDate = DateTime.Now;
+                                Update(detailmodel);
+
+                            }
+                            else
+                            {
+                                //不存在 更新
+
+                                CuPriceID = detaildal.Add(new JD_CuPriceDetail
+                                {
+                                    ItemName = Logmodel.ItemName,
+                                    ItemCode = Logmodel.ItemCode,
+                                    FUnit = Logmodel.FUnit,
+                                    BeginCuPrice = Logmodel.BeginCuPrice,
+                                    EndCuPrice = Logmodel.EndCuPrice,
+                                    FromCount = Logmodel.FromCount,
+                                    EndCount = Logmodel.EndCount,
+                                    SupplierName = Logmodel.SupplierName,
+                                    SupplierCode = Logmodel.SupplierCode,
+                                    CoinType = Logmodel.CoinType,
+                                    Price = Logmodel.Price,
+                                    MOQ = Logmodel.MOQ,
+                                    PPQ = Logmodel.PPQ,
+                                    LimitTimes = Logmodel.LimitTimes,
+                                    FModel = Logmodel.FModel,
+                                    CreateTime = DateTime.Now,
+                                    Operater = Logmodel.Operater,
+                                    PackageInfo = Logmodel.PackageInfo,
+                                    //CostPrice = Logmodel.CostPrice,
+                                    //CostCoinType = Logmodel.CostCoinType,
+                                    CostPrice = Logmodel.Price,
+                                    CostCoinType = Logmodel.CoinType,
+                                    PriceRemarks = Logmodel.PriceRemarks,
+                                    EffectiveDate=DateTime.Now
+                                    
+                                });
+                                Logmodel.ParentID = CuPriceID;
+                            }
+
+
                             #endregion
                             break;
                         case "2": //删除
                             #region 删除
-                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode);
-                            if (detailmodel != null)
+                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode, Logmodel.BeginCuPrice, Logmodel.EndCuPrice, Logmodel.FromCount, Logmodel.EndCount);
+
+                            if (detailmodel != null && !string.IsNullOrEmpty(detailmodel.SupplierCode))
                             {
                                 detailmodel.IsDeleted = 1;
+                                detailmodel.EffectiveDate = DateTime.Now;
                                 Update(detailmodel);
                             }
                             #endregion
                             break;
                         case "3": //涨价
                         case "4": //降价
-                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode);
-                            if (detailmodel != null)
+                            //2018-11-19 阶梯价更新时 数量也被修改 所以用ItemID确定唯一性
+                            //detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode, Logmodel.BeginCuPrice, Logmodel.EndCuPrice, Logmodel.FromCount, Logmodel.EndCount);
+                            detailmodel = Detail(Logmodel.ParentID);
+                            if (detailmodel != null && !string.IsNullOrEmpty(detailmodel.SupplierCode))
                             {
                                 detailmodel.Price = Logmodel.Price;
-                                detailmodel.CostPrice = Logmodel.CostPrice;
+                                //2018-10-29 单价和限价不做区分
+                                //detailmodel.CostPrice = Logmodel.CostPrice;
+                                detailmodel.CostPrice = Logmodel.Price;
+                                //2018-10-18  价格变更中还要包括铜价和数量的变更
+                                detailmodel.BeginCuPrice = Logmodel.BeginCuPrice;
+                                detailmodel.EndCuPrice = Logmodel.EndCuPrice;
+                                detailmodel.FromCount = Logmodel.FromCount;
+                                detailmodel.EndCount = Logmodel.EndCount;
+                                detailmodel.EffectiveDate = DateTime.Now;
+                                detailmodel.CoinType = Logmodel.CoinType;
+                                //detailmodel.MOQ = Logmodel.MOQ;
+                                //detailmodel.PPQ = Logmodel.PPQ;
+                                //detailmodel.LimitTimes = Logmodel.LimitTimes;
                                 Update(detailmodel);
                             }
+                            //2018-10-17 如果供应商变更了，需要IsDeleted原来的数据，并新增数据
+                            UpdateSupplierInfo(Logmodel.ItemID);
+
                             break;
                         case "5": //其他变更 除了价格的变更
+                            //2018-10-17 已不存在其他变更
                             #region 除了价格的变更  料号和供应商不能变
-                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode);
-                            if (detailmodel != null)
+                            detailmodel = Detail(Logmodel.SupplierCode, Logmodel.ItemCode, Logmodel.BeginCuPrice, Logmodel.EndCuPrice, Logmodel.FromCount, Logmodel.EndCount);
+                            if (detailmodel != null && !string.IsNullOrEmpty(detailmodel.SupplierCode))
                             {
 
                                 detailmodel.FUnit = Logmodel.FUnit;
@@ -596,20 +696,70 @@ namespace JDWinService.Dal
                             break;
 
                     }
+                    #endregion
 
+                    #region K3物料集成
+                    UpdateItemInfo(Logmodel.MOQ, Logmodel.PPQ, Logmodel.PackageInfo,
+                    Logmodel.ItemCode, ItemID.ToString());
+                    #endregion
 
-                    //更新状态
-                    Logmodel.IsUpdate = "1";
-                    logdal.Update(Logmodel);
                 }
             }
-            catch (Exception ex) {
-                common.WriteLogs(FileName, ItemID.ToString(), "Error:" + ex.Message); 
+            catch (Exception ex)
+            {
+                ErrorMsg = ex.Message;
+                common.WriteLogs(FileName, ItemID.ToString(), "Error:" + ex.Message);
             }
-           
+            finally
+            {
+                //更新状态
+                Logmodel.IsUpdate = "1";
+                Logmodel.UpdateTime = DateTime.Now;
+                logdal.Update(Logmodel);
+
+                if (!string.IsNullOrEmpty(ErrorMsg))
+                {
+                    common.AddLogQueue(TaskID, "JD_LimitPriceApply_Log", ItemID, "SQL", ErrorMsg, false);
+                }
+                else
+                {
+                    common.AddLogQueue(TaskID, "JD_LimitPriceApply_Log", ItemID, "SQL", "操作成功", true);
+                }
+            }
+
         }
 
-        public void UpdateItemInfo(string MOQ, string PPQ, string PackageInfo, string FNumber,string ItemID) {
+        protected void UpdateSupplierInfo(int LogItemID)
+        {
+            JD_LimitPriceApply_LogDal logdal = new JD_LimitPriceApply_LogDal();
+            JD_LimitPriceApply_Log logmodel = logdal.Detail(LogItemID);
+            if (logmodel != null)
+            {
+                JD_CuPriceDetail model = Detail(logmodel.ParentID);
+
+                //供应商编号不相等 禁用原来的铜价信息
+                if (logmodel.SupplierCode != model.SupplierCode)
+                {
+                    #region 新增铜价阶梯价记录
+                    JD_CuPriceDetail newmodel = model;
+                    newmodel.SupplierCode = logmodel.SupplierCode;
+                    newmodel.SupplierName = logmodel.SupplierName;
+                    newmodel.EffectiveDate = DateTime.Now;
+                    newmodel.IsDeleted = 0;
+                    Add(newmodel);
+                    #endregion
+
+                    //禁用原来的铜价信息
+                    model.IsDeleted = 1;
+                    Update(model);
+                }
+
+
+            }
+        }
+
+        public void UpdateItemInfo(string MOQ, string PPQ, string PackageInfo, string FNumber, string ItemID)
+        {
             if (!string.IsNullOrEmpty(FNumber))
             {
                 if (!string.IsNullOrEmpty(MOQ))
@@ -668,7 +818,54 @@ namespace JDWinService.Dal
             {
                 common.WriteLogs(Common.FileType.采购限价申请.ToString(), ItemID, "---FNumber不存在---");
             }
-            
+
         }
+
+        public void UpdateParentID()
+        {
+            try
+            {
+                string sql = " select distinct TaskID    from [dbo].[JD_LimitPriceApply_Log] where ApplyType='3' and ParentID=0  order by TaskID asc ";
+                JD_LimitPriceApply_LogDal limtdal = new JD_LimitPriceApply_LogDal();
+                DataView dv = DBUtil.Query(sql, connectionString).Tables[0].DefaultView;
+                foreach (DataRowView dr in dv)
+                {
+                    string DataSql = string.Format(@"select  *   from[dbo].[JD_LimitPriceApply_Log] where ApplyType = '3' and ParentID = 0  and TaskID = '{0}'", dr["TaskID"].ToString());
+
+                    DataView Newdv = DBUtil.Query(DataSql, connectionString).Tables[0].DefaultView;
+                    int Count = 0;
+                    foreach (DataRowView drchild in Newdv)
+                    {
+                        //偶数行 更新Parent
+                        if (Count % 2 == 1)
+                        {
+                            int ItemID = Convert.ToInt32(drchild["ItemID"].ToString());
+                            JD_LimitPriceApply_Log limlogNew = limtdal.Detail(ItemID);
+                            JD_LimitPriceApply_Log limlog = limtdal.Detail(ItemID - 1);
+                            if (limlog != null)
+                            {
+                                JD_CuPriceDetail detailMol = Detail(limlog.SupplierCode, limlog.ItemCode, limlog.BeginCuPrice, limlog.EndCuPrice,
+                                    limlog.FromCount, limlog.EndCount);
+                                limlogNew.ParentID = detailMol.ItemID;
+                                limtdal.Update(limlogNew);
+                            }
+                        }
+                        Count++;
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                common.WriteLogs("铜价阶梯价服务错误："+ex.Message);
+            }
+            finally
+            {
+
+            }
+        }
+
+
     }
 }

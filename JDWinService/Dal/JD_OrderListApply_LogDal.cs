@@ -18,6 +18,7 @@ namespace JDWinService.Dal
     public class JD_OrderListApply_LogDal
     {
         public static string connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["ConnectionString"].Value; //连接信息
+        public static string k3connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["K3ConnectionString"].Value; //连接信息
         Common common = new Common();
 
         /// <summary>
@@ -107,7 +108,9 @@ namespace JDWinService.Dal
                 if (!Convert.IsDBNull(myReader["ordernum"])) { myDetail.ordernum = Convert.ToString(myReader["ordernum"]); }
                 if (!Convert.IsDBNull(myReader["REQType"])) { myDetail.REQType = Convert.ToString(myReader["REQType"]); }
                 if (!Convert.IsDBNull(myReader["IsPart"])) { myDetail.IsPart = Convert.ToInt32(myReader["IsPart"]); }
-
+                if (!Convert.IsDBNull(myReader["ExtraInfo"])) { myDetail.ExtraInfo = Convert.ToString(myReader["ExtraInfo"]); }
+                if (!Convert.IsDBNull(myReader["HeadRemarks"])) { myDetail.HeadRemarks = Convert.ToString(myReader["HeadRemarks"]); }
+                if (!Convert.IsDBNull(myReader["FFixLeadTime"])) { myDetail.FFixLeadTime = Convert.ToInt32(myReader["FFixLeadTime"]); }
             }
 
             myReader.Close();
@@ -118,6 +121,8 @@ namespace JDWinService.Dal
             return myDetail;
         }
 
+     
+
         /// <summary>
         /// 更新JD_OrderListApply_Log对象
         /// 编写人：ywk
@@ -126,7 +131,7 @@ namespace JDWinService.Dal
         public void Update(JD_OrderListApply_Log model)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("UPDATE JD_OrderListApply_Log SET TaskID = @m_TaskID,CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,PlanType = @m_PlanType,PlanTypeCode = @m_PlanTypeCode,CoinType = @m_CoinType,CoinTypeCode = @m_CoinTypeCode,Rate = @m_Rate,RateType = @m_RateType,RateTypeCode = @m_RateTypeCode,OrderMode = @m_OrderMode,OrderModeCode = @m_OrderModeCode,OrderType = @m_OrderType,OrderTypeCode = @m_OrderTypeCode,OrderRange = @m_OrderRange,OrderRangeCode = @m_OrderRangeCode,BalanceType = @m_BalanceType,BalanceTypeCode = @m_BalanceTypeCode,BU = @m_BU,BUCode = @m_BUCode,FAllPrice = @m_FAllPrice,FAllTaxPrice = @m_FAllTaxPrice,FBillNo = @m_FBillNo,FInterID = @m_FInterID,FEntryID = @m_FEntryID,FNumber = @m_FNumber,FName = @m_FName,FModel = @m_FModel,FQtyMin = @m_FQtyMin,FBatchAppendQty = @m_FBatchAppendQty,WuLiaoCode = @m_WuLiaoCode,WuLiaoSupplier = @m_WuLiaoSupplier,EnginCRName = @m_EnginCRName,EnginCRCode = @m_EnginCRCode,PriceXiShu = @m_PriceXiShu,SupplierVersion = @m_SupplierVersion,funit = @m_funit,funitID = @m_funitID,FQty = @m_FQty,FCommitQty = @m_FCommitQty,FpoNum = @m_FpoNum,FFetchTime = @m_FFetchTime,FSupplyID = @m_FSupplyID,fsupNo = @m_fsupNo,fsupname = @m_fsupname,FAuxPrice = @m_FAuxPrice,FAuxTaxPrice = @m_FAuxTaxPrice,FAmount = @m_FAmount,FTaxAmount = @m_FTaxAmount,Remarks = @m_Remarks,FCess = @m_FCess,POHightPrice = @m_POHightPrice,IsUpdate = @m_IsUpdate,FDate = @m_FDate,DeptID = @m_DeptID,DeptIDCode = @m_DeptIDCode,FEmpID = @m_FEmpID,FEmpIDCode = @m_FEmpIDCode,FManageID = @m_FManageID,FManageIDCode = @m_FManageIDCode,FBillerID = @m_FBillerID,FDate1 = @m_FDate1,ordernum = @m_ordernum,REQType = @m_REQType,IsPart = @m_IsPart WHERE ItemID = @m_ItemID", con);
+            SqlCommand cmd = new SqlCommand("UPDATE JD_OrderListApply_Log SET TaskID = @m_TaskID,CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,PlanType = @m_PlanType,PlanTypeCode = @m_PlanTypeCode,CoinType = @m_CoinType,CoinTypeCode = @m_CoinTypeCode,Rate = @m_Rate,RateType = @m_RateType,RateTypeCode = @m_RateTypeCode,OrderMode = @m_OrderMode,OrderModeCode = @m_OrderModeCode,OrderType = @m_OrderType,OrderTypeCode = @m_OrderTypeCode,OrderRange = @m_OrderRange,OrderRangeCode = @m_OrderRangeCode,BalanceType = @m_BalanceType,BalanceTypeCode = @m_BalanceTypeCode,BU = @m_BU,BUCode = @m_BUCode,FAllPrice = @m_FAllPrice,FAllTaxPrice = @m_FAllTaxPrice,FBillNo = @m_FBillNo,FInterID = @m_FInterID,FEntryID = @m_FEntryID,FNumber = @m_FNumber,FName = @m_FName,FModel = @m_FModel,FQtyMin = @m_FQtyMin,FBatchAppendQty = @m_FBatchAppendQty,WuLiaoCode = @m_WuLiaoCode,WuLiaoSupplier = @m_WuLiaoSupplier,EnginCRName = @m_EnginCRName,EnginCRCode = @m_EnginCRCode,PriceXiShu = @m_PriceXiShu,SupplierVersion = @m_SupplierVersion,funit = @m_funit,funitID = @m_funitID,FQty = @m_FQty,FCommitQty = @m_FCommitQty,FpoNum = @m_FpoNum,FFetchTime = @m_FFetchTime,FSupplyID = @m_FSupplyID,fsupNo = @m_fsupNo,fsupname = @m_fsupname,FAuxPrice = @m_FAuxPrice,FAuxTaxPrice = @m_FAuxTaxPrice,FAmount = @m_FAmount,FTaxAmount = @m_FTaxAmount,Remarks = @m_Remarks,FCess = @m_FCess,POHightPrice = @m_POHightPrice,IsUpdate = @m_IsUpdate,FDate = @m_FDate,DeptID = @m_DeptID,DeptIDCode = @m_DeptIDCode,FEmpID = @m_FEmpID,FEmpIDCode = @m_FEmpIDCode,FManageID = @m_FManageID,FManageIDCode = @m_FManageIDCode,FBillerID = @m_FBillerID,FDate1 = @m_FDate1,ordernum = @m_ordernum,REQType = @m_REQType,IsPart = @m_IsPart,ExtraInfo = @m_ExtraInfo,HeadRemarks=@m_HeadRemarks,FFixLeadTime=@m_FFixLeadTime WHERE ItemID = @m_ItemID", con);
             con.Open();
 
             if (model.TaskID == null)
@@ -665,6 +670,32 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_IsPart", SqlDbType.Int, 0)).Value = model.IsPart;
             }
+
+            if (model.ExtraInfo == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_ExtraInfo", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_ExtraInfo", SqlDbType.NVarChar, 50)).Value = model.ExtraInfo;
+            }
+            if (model.HeadRemarks == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_HeadRemarks", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_HeadRemarks", SqlDbType.NVarChar, 50)).Value = model.HeadRemarks;
+            }
+            if (model.FFixLeadTime == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_FFixLeadTime", SqlDbType.Int, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_FFixLeadTime", SqlDbType.Int, 0)).Value = model.FFixLeadTime;
+            }
+
             cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = model.ItemID;
 
             try { cmd.ExecuteNonQuery(); }
@@ -865,11 +896,15 @@ namespace JDWinService.Dal
             K3JsonHelper helper = new K3JsonHelper();
             string headJson = string.Empty;
             string BodyJsonStr = string.Empty;
-            string SendJson = string.Empty; 
+            string SendJson = string.Empty;
+            string Error = string.Empty;
+            string ExtraInfo = string.Empty; //采购单号后缀
+           
             DataView dv = GetDetail(TaskID);
             if (dv.Count > 0)
             {
                 JD_OrderListApply_Log model = Detail(Convert.ToInt32(dv[0]["ItemID"].ToString()));
+                ExtraInfo = model.ExtraInfo;
                 #region Page1 解析并序列化
 
                 Json_POOrder_Head headMol = helper.GetPageMol<Json_POOrder_Head>(TaskID, APIUrl, FuncName, Token, FileType,Common.PageNum.Page1.ToString());
@@ -890,8 +925,27 @@ namespace JDWinService.Dal
                     headMol.Page1.FExchangeRateType.FNumber = model.RateTypeCode;
                     headMol.Page1.FPOMode.FName = model.OrderMode;//采购模式
                     headMol.Page1.FPOMode.FNumber = model.OrderModeCode;
+                    headMol.Page1.FExplanation = model.HeadRemarks;  //供应商摘要
+
+                    #region 审核信息赋值
                     headMol.Page1.FCheckerID.FName = "";
                     headMol.Page1.FCheckerID.FNumber = "";
+
+                    //string CheckInfo = string.Empty;
+                    //CheckInfo = GetK3CheckInfo(model.TaskID.ToString());
+                    //headMol.Page1.FCheckerID.FName = "";
+                    //headMol.Page1.FCheckerID.FNumber = "";
+                    //if (!string.IsNullOrEmpty(CheckInfo))
+                    //{
+                    //    if (CheckInfo.IndexOf(',') > -1)
+                    //    {
+                    //        headMol.Page1.FCheckerID.FName = CheckInfo.Split(',')[0];
+                    //        headMol.Page1.FCheckerID.FNumber = CheckInfo.Split(',')[1];
+                    //    }
+                    //}
+                    //headMol.Page1.FStatus = "1";
+                    //headMol.Page1.FCheckDate = DateTime.Now.ToString("yyyy-MM-dd");
+                    #endregion
 
                     headMol.Page1.FMangerID.FName = model.FManageID;
                     headMol.Page1.FMangerID.FNumber = model.FManageIDCode;
@@ -938,6 +992,7 @@ namespace JDWinService.Dal
 
                 foreach (DataRowView dr in dv)
                 {
+                   
                     try
                     {
                         model = Detail(Convert.ToInt32(dr["ItemID"]));
@@ -949,7 +1004,7 @@ namespace JDWinService.Dal
                             bodyMol.Page2.FItemModel = model.FModel;
                             bodyMol.Page2.FItemID.FName = model.FName;
                             bodyMol.Page2.FItemID.FNumber = model.FNumber;
-                            bodyMol.Page2.FBaseUnit = model.funit;
+                            bodyMol.Page2.FBaseUnit = model.funit; 
                             bodyMol.Page2.FQty = Math.Round(model.FQty, 6).ToString();
                             bodyMol.Page2.FAuxQty = Math.Round(model.FpoNum, 6).ToString();
                             bodyMol.Page2.Fauxprice = Math.Round(model.FAuxPrice, 6).ToString();
@@ -959,16 +1014,53 @@ namespace JDWinService.Dal
                             bodyMol.Page2.FPlanMode.FNumber = "MTS计划模式";
                             bodyMol.Page2.FCheckMethod.FName = "免检";
                             bodyMol.Page2.FCheckMethod.FNumber = "MJ";
+
+                            //如果采购申请单 类型是物料 FSourceTranType等于70 
+                            //2018-11-28 ywk 
+                            if (model.REQType == "WL")
+                            {
+                                bodyMol.Page2.FSourceTranType = "70";   //源单类型
+                                //增加源单号 内码 行号
+                                //2018-11-28 ywk 新增
+                                bodyMol.Page2.FSourceBillNo = model.FBillNo;
+                                bodyMol.Page2.FSourceInterId = model.FInterID.ToString();
+                                bodyMol.Page2.FSourceEntryID = model.FEntryID.ToString();
+                            }
+                            else {
+                                bodyMol.Page2.FSourceBillNo = model.FBillNo;
+                                bodyMol.Page2.FSourceEntryID = model.FEntryID.ToString();
+                            }
                             bodyMol.Page2.Fdate1 = model.FDate1.ToString("yyyy-MM-dd");
-                            bodyJson = JsonConvert.SerializeObject(bodyMol);
+                            if (model.FDate1 != null)
+                            {
+                                bodyMol.Page2.FEntrySelfP0286 = model.FDate1.AddDays(model.FFixLeadTime).ToString("yyyy-MM-dd");
+                            }
+                          
+                             bodyJson = JsonConvert.SerializeObject(bodyMol);
                             //获取Page2中的内容
                             o = JObject.Parse(bodyJson);
                             bodyJson = o["Page2"].ToString();
                             BodyJsonStr += bodyJson + ",";
                         }
+
+                        #region 更新请购单 关联数量以及是否关闭标志
+                     
+                        if (!string.IsNullOrEmpty(model.REQType))
+                        {
+
+                            if (model.REQType == "NPI" || model.REQType.ToString() == "QT")
+                            {
+                                UpdateFLinkQty(model.FBillNo, model.FInterID, model.FpoNum);
+                            }
+                            else {
+                               UpdateFLinkQtyWL(model.FInterID, model.FEntryID, model.FQty);
+                            }
+                        }
+                        #endregion 
                     }
                     catch (Exception ex)
                     {
+                        Error += ex.Message;
                         common.WriteLogs(FileType, TaskID.ToString(), "Error----->" + ex.Message);
                     }
                     finally
@@ -998,12 +1090,19 @@ namespace JDWinService.Dal
             if (result2.StatusCode == "200")
             {
                 common.WriteLogs(FileType, TaskID.ToString(), "K3集成成功!!");
-                return result2.Message;
+                common.AddLogQueue(TaskID, "JD_OrderListApply_Log", 0, "API", "K3集成成功!K3返回采购单号:" + result2.Message, true);
+                //加上订单后缀
+                string FBillNo = result2.Message;
+                FBillNo = FBillNo + (!string.IsNullOrEmpty(ExtraInfo) ? "-" + ExtraInfo : "");
+                //更新K3中的订单后缀
+                UpdateK3Poorder(result2.Message, ExtraInfo, TaskID.ToString());
+                return FBillNo;
             }
             else
             {
                 common.WriteLogs(FileType, "K3集成失败--->" + result2.Message);
                 common.WriteLogs(FileType, TaskID.ToString(), "K3集成失败--->" + result2.Message);
+                common.AddLogQueue(TaskID, "JD_OrderListApply_Log", 0, "API", "K3集成失败!系统错误："+((!string.IsNullOrEmpty(Error))?Error:"无")+",K3错误提示："+ result2.Message, false);
                 return "";
             }
             #endregion 
@@ -1020,7 +1119,7 @@ namespace JDWinService.Dal
         /// <returns></returns>
         public DataView GetDistinctList()
         {
-            string sql = string.Format(@" select  distinct TaskID from JD_OrderListApply_Log where IsUpdate='0'");
+            string sql = string.Format(@" select  distinct TaskID,REQType from JD_OrderListApply_Log where IsUpdate='0'");
             return DBUtil.Query(sql).Tables[0].DefaultView;
         }
 
@@ -1029,15 +1128,15 @@ namespace JDWinService.Dal
             string sql = string.Format(@" update JD_OrderListApply set ordernum='{0}' where TaskID='{1}'", ordernum, TaskID.ToString());
             DBUtil.GetSingle(sql);
             sql = string.Format(@" update JD_OrderListApply_Log set ordernum='{0}' where TaskID='{1}'", ordernum, TaskID.ToString());
-            DBUtil.GetSingle(sql);
+            DBUtil.GetSingle(sql); 
         }
 
         //若是其他或者NPI的采购订单 则要更新关联数量
         //若关联数量等于请购数量 IsClosed状态从0到1 更新 表示状态关闭
-        public void UpdateFLinkQty(string SNumber,string FNumber, decimal FQty) {
+        public void UpdateFLinkQty(string SNumber,int ItemID, decimal FQty) {
             JD_PORequestManageDal dal = new JD_PORequestManageDal();
-            JD_PORequestManage model = dal.Detail(SNumber, FNumber);
-            if (model != null) {
+            JD_PORequestManage model = dal.Detail(SNumber, ItemID);
+            if (model != null&&!string.IsNullOrEmpty(model.SNumber)&&model.IsClosed==0) {
                 model.FLinkQty += FQty;
                 if (model.FLinkQty == model.FQty)
                 {
@@ -1047,5 +1146,75 @@ namespace JDWinService.Dal
             }
         }
 
+
+        public void UpdateFLinkQtyWL(int FInterID, int FEntryID, decimal FQty)
+        {
+            PORequestEntryDal dal = new PORequestEntryDal();
+            PORequestEntry model = dal.Detail(FInterID, FEntryID);
+
+            if (model != null)
+            {
+                model.FCommitQty += FQty;
+                if (model.FCommitQty == model.FQty)
+                {
+                    model.FMRPClosed = 1;
+                    dal.Update(model);
+                }
+            }
+            //采购订单的表身都是关闭状态 更新表头的Close字段 0=>1
+            if (!dal.NeedClosed(FInterID))
+            {
+                PORequestDal headDal = new PORequestDal();
+                headDal.UpdateClose(FInterID);
+            }
+        }
+
+        //更新采购订单中的订单号后缀 
+        //ywk 2018-11-22
+        protected void UpdateK3Poorder(string Fbillno,string ExtraInfo,string TaskID )
+        {
+
+            string sql = string.Empty;
+            string CheckInfo = GetK3CheckInfo(TaskID);
+            string FName = "";
+            string FNumber = "";
+            if (!string.IsNullOrEmpty(CheckInfo))
+            {
+                if (CheckInfo.IndexOf(',') > -1)
+                {
+                   FName = CheckInfo.Split(',')[0];
+                   FNumber = CheckInfo.Split(',')[1];
+                }
+            }
+            string FbillnoNew = (!string.IsNullOrEmpty(ExtraInfo)) ? Fbillno + "-" + ExtraInfo : Fbillno;
+            sql = string.Format(@" update poorder set FCheckerID='{0}',FCheckDate='{1}',Fbillno='{3}' where Fbillno='{2}'", FNumber,
+                DateTime.Now.ToString("yyyy-MM-dd"), Fbillno, FbillnoNew);
+            DBUtil.ExecuteSql(sql, k3connectionString);
+
+        }
+
+        //获取流程最后一个Checker 在K3中的编号
+        //ywk 2018-11-22
+        protected string GetK3CheckInfo(string TaskID)
+        {
+            //获取流程最后一个Checker的姓名
+            //用姓名匹配的原因  在K3表中没有明确的对应的关系 t_base_User t_base_Emp
+            string sql = string.Format(@" select top 1 OwnerAccount from dbo.BPMInstProcSteps where OwnerAccount is not null
+                                        and TaskID='{0}'  order by StepID desc", TaskID);
+            Object obj = DBUtil.GetSingle(sql, connectionString);
+            string LastStepName =""; 
+            if (obj != null)
+            {
+                LastStepName = obj.ToString();
+            }
+            sql = string.Format(@"select   FName+','+Convert(nvarchar,FUserID)  from t_base_User where FName='{0}' and FForbidden=0", LastStepName);
+            obj = DBUtil.GetSingle(sql, k3connectionString);
+            if (obj != null)
+            {
+                LastStepName = obj.ToString();
+            }
+
+            return LastStepName;
+        }
     }
 }

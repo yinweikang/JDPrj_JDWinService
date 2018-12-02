@@ -275,5 +275,11 @@ namespace JDWinService.Model
 
         public string REQType { get; set; }
         public int IsPart { get; set; }
+
+        public string ExtraInfo { get; set; }
+
+        public string HeadRemarks { get; set; }
+
+        public int FFixLeadTime { get; set; }
     }
 }

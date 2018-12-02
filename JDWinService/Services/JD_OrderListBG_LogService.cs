@@ -26,5 +26,13 @@ namespace JDWinService.Services
         {
             dal.UpdateNPIPOEntry(TaskID);
         }
+
+        /// <summary>
+        /// 采购订单变更 NPI和其他
+        /// </summary>
+        public void UpdateOrderBG()
+        {
+            dal.UpdateOrderBG();
+        }
     }
 }

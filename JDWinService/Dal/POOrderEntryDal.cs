@@ -805,7 +805,7 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0266", SqlDbType.Decimal, 28)).Value = model.FEntrySelfP0266;
             }
-            if (model.FEntrySelfP0267 == new DateTime())
+            if (model.FEntrySelfP0267 == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0267", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }
@@ -813,7 +813,7 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0267", SqlDbType.DateTime, 0)).Value = model.FEntrySelfP0267;
             }
-            if (model.FEntrySelfP0268 == new DateTime())
+            if (model.FEntrySelfP0268 == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0268", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }

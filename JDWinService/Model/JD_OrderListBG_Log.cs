@@ -15,9 +15,6 @@ namespace JDWinService.Model
     {
         #region 类的属性定义
 
-        /// <summary>
-        /// 
-        /// </summary>
         public int ItemID { get; set; }
         /// <summary>
         /// 
@@ -134,7 +131,15 @@ namespace JDWinService.Model
         /// <summary>
         /// 
         /// </summary>
+        public DateTime FirstConfirmDate { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTime FEntrySelfP0268 { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime LastConfirmDate { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -155,6 +160,10 @@ namespace JDWinService.Model
         /// 
         /// </summary>
         public string OrderListBGName { get; set; }
+
+        public string BPMSourceNo { get; set; }
+
+        public string BPMItemID { get; set; }
 
         #endregion
     }

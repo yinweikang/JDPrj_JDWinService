@@ -15,7 +15,7 @@ namespace JDWinService.Model
         /// <summary>
         /// 
         /// </summary>
-        public DateTime CreateTime { get; set; }
+        public DateTime? CreateTime { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -96,5 +96,11 @@ namespace JDWinService.Model
         /// 
         /// </summary>
         public string CostCoinType { get; set; }
+
+
+        public DateTime? EffectiveDate { get; set; }
+
+        public string PriceRemarks { get; set; }
+
     }
 }

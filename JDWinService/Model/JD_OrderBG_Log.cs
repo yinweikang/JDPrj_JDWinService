@@ -54,5 +54,7 @@ namespace JDWinService.Model
         /// 
         /// </summary>
         public string PONum { get; set; }
+
+
     }
 }

@@ -563,28 +563,38 @@ namespace JDWinService.Dal
         /// </summary>
         /// <param name="ItemID"></param>
         /// <param name="FileName"></param>
-        public void UpdatePORequest_Apply(int ItemID, string FileName)
+        public void UpdatePORequest_Apply(int ItemID, string FileName,int TaskID)
         {
             JD_PORequest_Log model = Detail(ItemID);
             string Sql = string.Empty;
             string LogMsg = string.Empty;
             string FUserID = string.Empty;
+            decimal Empty = Convert.ToDecimal("0");
             if (model != null)
             {
                 try
                 {
-                    decimal FAuxQty = model.FQty;
+                    decimal FAuxQty = model.FQtyNew;
 
                     #region 更新PORequestEntry 的FAuxQty
-                    string FCoefient = MeasureUnit(model.FUnitID);
-                    if (!string.IsNullOrEmpty(FCoefient))
+                    //2018-11-12 新增功能
+                    //如果请购单对应的请购数量为0 删除原单
+                    if (FAuxQty == Empty)
                     {
-                        decimal Fient = Convert.ToDecimal(FCoefient);
-                        FAuxQty = Math.Round(model.FQty / Fient, 10);
+                        Sql = string.Format("delete from PORequestEntry where FInterID='{0}' and FEntryID='{1}'",model.FInterID,model.FEntryID);
+                        DBUtil.ExecuteSql(Sql, K3connectionString);
                     }
-                    Sql = string.Format(@"update PORequestEntry set FQty='{0}',FAuxQty='{1}' where FInterID='{2}' and FEntryID='{3}'",
-                        model.FQty.ToString("f10"), FAuxQty.ToString("f10"), model.FInterID, model.FEntryID);
-                    DBUtil.ExecuteSql(Sql, K3connectionString);
+                    else { 
+                        string FCoefient = MeasureUnit(model.FUnitID);
+                        if (!string.IsNullOrEmpty(FCoefient))
+                        {
+                            decimal Fient = Convert.ToDecimal(FCoefient);
+                            FAuxQty = Math.Round(model.FQtyNew / Fient, 10);
+                        }
+                        Sql = string.Format(@"update PORequestEntry set FQty='{0}',FAuxQty='{1}',FUse='{4}' where FInterID='{2}' and FEntryID='{3}'",
+                            model.FQtyNew.ToString("f10"), FAuxQty.ToString("f10"), model.FInterID, model.FEntryID, model.DetailRemarks);
+                        DBUtil.ExecuteSql(Sql, K3connectionString);
+                    }
                     #endregion
 
 
@@ -597,18 +607,25 @@ namespace JDWinService.Dal
                         throw new Exception("未能在系统中找到和K3匹配的FUserID");
                     }
                     else {
+                        //备注更新去掉
+                        //Sql = string.Format(@" update PORequest set FCheckerID=(select top 1 FUserID from t_Base_User where FName='{0}'),
+                        //             FCheckTime='{1}',fstatus=1,FNote='{3}',FCheckDate='{1}' where FInterID='{2}' ",
+                        //             model.CheckID, model.CreateTime.ToString("yyyy-MM-dd"), model.FInterID, model.Remarks);
+
                         Sql = string.Format(@" update PORequest set FCheckerID=(select top 1 FUserID from t_Base_User where FName='{0}'),
-                                     FCheckTime='{1}',fstatus=1,FNote='{3}',FCheckDate='{1}' where FInterID='{2}' ",
-                                     model.CheckID, model.CreateTime.ToString("yyyy-MM-dd"), model.FInterID, model.Remarks);
+                                     FCheckTime='{1}',fstatus=1,FCheckDate='{1}' where FInterID='{2}' ",
+                                    model.CheckID, model.CreateTime.ToString("yyyy-MM-dd"), model.FInterID);
                         DBUtil.ExecuteSql(Sql, K3connectionString);
-                    }  
+                    }
                     #endregion
+
+                    
 
                 }
                 catch (Exception ex)
                 {
                     common.WriteLogs(FileName, ItemID.ToString(), ex.Message);
-                    common.AddLogQueue(0, "物料请购单"+ model.LogType, ItemID, "SQL", ex.Message, false);
+                    LogMsg = ex.Message; 
                 }
                 finally
                 {
@@ -616,8 +633,16 @@ namespace JDWinService.Dal
                     model.IsUpdate = "1";
                     model.UpdateTime = DateTime.Now;
                     Update(model);
-                }
 
+                    if (!string.IsNullOrEmpty(LogMsg))
+                    {
+                        common.AddLogQueue(TaskID, "JD_PORequest_Log", ItemID, "SQL", LogMsg, false);
+                    }
+                    else
+                    {
+                        common.AddLogQueue(TaskID, "JD_PORequest_Log", ItemID, "SQL", "操作成功！", true);
+                    }
+                } 
             }
             else
             {
@@ -639,29 +664,41 @@ namespace JDWinService.Dal
         /// </summary>
         /// <param name="ItemID"></param>
         /// <param name="FileName"></param>
-        public void UpdatePORequest_NumBG(int ItemID, string FileName)
+        public void UpdatePORequest_NumBG(int ItemID, string FileName,int TaskID)
         {
             //获取待更新的Log 数据明细
             JD_PORequest_Log logmodel = Detail(ItemID);
             JD_PORequestManageDal dal = new JD_PORequestManageDal();
-            JD_PORequestManage model = dal.Detail(logmodel.SNumber, logmodel.FNumber);
+            JD_PORequestManage model = dal.Detail(logmodel.SNumber, logmodel.ItemID);
+            string ErrorMsg = string.Empty;
             try
             {
                 if (model != null)
                 {
                     //更新Manage表数量 
                     model.FQty = logmodel.FQtyNew;
-                    dal.Update(model);
-
-                    //更新日志表状态
-                    logmodel.IsUpdate = "1";
-                    logmodel.UpdateTime = DateTime.Now;
-                    Update(logmodel);
+                    dal.Update(model); 
                 }
             }
             catch (Exception ex)
             {
+                ErrorMsg = ex.Message;
                 common.WriteLogs(FileName, ItemID.ToString(), ex.Message);
+            }
+            finally {
+                //更新日志表状态
+                logmodel.IsUpdate = "1";
+                logmodel.UpdateTime = DateTime.Now;
+                Update(logmodel);
+
+                if (!string.IsNullOrEmpty(ErrorMsg))
+                {
+                    common.AddLogQueue(TaskID, "JD_PORequest_Log", ItemID, "SQL", ErrorMsg, false);
+                }
+                else
+                {
+                    common.AddLogQueue(TaskID, "JD_PORequest_Log", ItemID, "SQL", "操作成功！", true);
+                }
             }
 
 

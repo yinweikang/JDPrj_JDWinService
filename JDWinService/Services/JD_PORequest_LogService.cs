@@ -14,13 +14,13 @@ namespace JDWinService.Services
         public void UpdatePORequest(int ItemID, string FileName) {
             //dal.UpdatePORequest( ItemID,  FileName);
         }
-        public void UpdatePORequest_Apply(int ItemID, string FileName)
+        public void UpdatePORequest_Apply(int ItemID, string FileName,int TaskID)
         {
-            dal.UpdatePORequest_Apply( ItemID,  FileName);
+            dal.UpdatePORequest_Apply( ItemID,  FileName,TaskID);
         }
 
-        public void UpdatePORequest_NumBG(int ItemID, string FileName) {
-            dal.UpdatePORequest_NumBG(ItemID, FileName);
+        public void UpdatePORequest_NumBG(int ItemID, string FileName,int TaskID) {
+            dal.UpdatePORequest_NumBG(ItemID, FileName,TaskID);
         }
         public DataView GetDistinctList() {
             return dal.GetDistinctList();

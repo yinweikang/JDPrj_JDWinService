@@ -14,12 +14,33 @@ namespace JDWinService.Dal
     public  class JD_LimitPriceApply_LogDal
     {
         public static string connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["ConnectionString"].Value; //连接信息
+
+        public bool IsExist(int itemid)
+        {
+            SqlConnection con = new SqlConnection(connectionString);
+            SqlCommand cmd = new SqlCommand("SELECT COUNT(1) FROM JD_LimitPriceApply_Log WHERE ItemID = @m_ItemID", con);
+            con.Open();
+            cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = itemid;
+
+            bool b = false;
+            try
+            {
+                int count = Int32.Parse(cmd.ExecuteScalar().ToString());
+                if (count > 0) b = true;
+            }
+            catch (Exception e) { throw new Exception(e.ToString()); }
+            cmd.Dispose();
+            con.Close();
+            con.Dispose();
+            return b;
+        }
+
         /// <summary>
-		/// 对象JD_LimitPriceApply_Log明细
-		/// 编写人：ywk
-		/// 编写日期：2018/7/20 星期五
-		/// </summary>
-		public JD_LimitPriceApply_Log Detail(int ItemID)
+        /// 对象JD_LimitPriceApply_Log明细
+        /// 编写人：ywk
+        /// 编写日期：2018/7/20 星期五
+        /// </summary>
+        public JD_LimitPriceApply_Log Detail(int ItemID)
         {
             SqlConnection con = new SqlConnection(connectionString);
             SqlCommand cmd = new SqlCommand("SELECT * FROM JD_LimitPriceApply_Log WHERE ItemID = @m_ItemID", con);
@@ -60,6 +81,8 @@ namespace JDWinService.Dal
                 if (!Convert.IsDBNull(myReader["CostPrice"])) { myDetail.CostPrice = Convert.ToDecimal(myReader["CostPrice"]); }
                 if (!Convert.IsDBNull(myReader["CostCoinType"])) { myDetail.CostCoinType = Convert.ToString(myReader["CostCoinType"]); }
                 if (!Convert.IsDBNull(myReader["ParentID"])) { myDetail.ParentID = Convert.ToInt32(myReader["ParentID"]); }
+                if (!Convert.IsDBNull(myReader["EffectiveDate"])) { myDetail.EffectiveDate = Convert.ToDateTime(myReader["EffectiveDate"]); }
+                if (!Convert.IsDBNull(myReader["PriceRemarks"])) { myDetail.PriceRemarks = Convert.ToString(myReader["PriceRemarks"]); }
             }
 
             myReader.Close();
@@ -71,235 +94,7 @@ namespace JDWinService.Dal
         }
 
 
-        /// <summary>
-        /// 新增JD_LimitPriceApply_Log对象
-        /// 编写人：ywk
-        /// 编写日期：2018/7/20 星期五
-        /// </summary>
-        public int Add(JD_LimitPriceApply_Log model)
-        {
-            SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("INSERT INTO JD_LimitPriceApply_Log(CreateTime,UpdateTime,IsUpdate,Operater,SupplierName,SupplierCode,BeginCuPrice,EndCuPrice,ItemName,ItemCode,FromCount,EndCount,Price,FModel,FUnit,CoinType,MOQ,PPQ,LimitTimes,ApplyType,TaskID,PackageInfo,CostPrice,CostCoinType,ParentID) VALUES(@m_CreateTime,@m_UpdateTime,@m_IsUpdate,@m_Operater,@m_SupplierName,@m_SupplierCode,@m_BeginCuPrice,@m_EndCuPrice,@m_ItemName,@m_ItemCode,@m_FromCount,@m_EndCount,@m_Price,@m_FModel,@m_FUnit,@m_CoinType,@m_MOQ,@m_PPQ,@m_LimitTimes,@m_ApplyType,@m_TaskID,@m_PackageInfo,@m_CostPrice,@m_CostCoinType,@m_ParentID) SELECT @thisId=@@IDENTITY FROM JD_LimitPriceApply_Log", con);
-            con.Open();
-
-            if (model.CreateTime == new DateTime())
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = model.CreateTime;
-            }
-            if (model.UpdateTime == new DateTime())
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_UpdateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_UpdateTime", SqlDbType.DateTime, 0)).Value = model.UpdateTime;
-            }
-            if (model.IsUpdate == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_IsUpdate", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_IsUpdate", SqlDbType.NVarChar, 50)).Value = model.IsUpdate;
-            }
-            if (model.Operater == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_Operater", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_Operater", SqlDbType.NVarChar, 50)).Value = model.Operater;
-            }
-            if (model.SupplierName == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_SupplierName", SqlDbType.NVarChar, 100)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_SupplierName", SqlDbType.NVarChar, 100)).Value = model.SupplierName;
-            }
-            if (model.SupplierCode == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_SupplierCode", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_SupplierCode", SqlDbType.NVarChar, 50)).Value = model.SupplierCode;
-            }
-            if (model.BeginCuPrice == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_BeginCuPrice", SqlDbType.Decimal, 18)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_BeginCuPrice", SqlDbType.Decimal, 18)).Value = model.BeginCuPrice;
-            }
-            if (model.EndCuPrice == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_EndCuPrice", SqlDbType.Decimal, 18)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_EndCuPrice", SqlDbType.Decimal, 18)).Value = model.EndCuPrice;
-            }
-            if (model.ItemName == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ItemName", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ItemName", SqlDbType.NVarChar, 50)).Value = model.ItemName;
-            }
-            if (model.ItemCode == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ItemCode", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ItemCode", SqlDbType.NVarChar, 50)).Value = model.ItemCode;
-            }
-            if (model.FromCount == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FromCount", SqlDbType.Int, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FromCount", SqlDbType.Int, 0)).Value = model.FromCount;
-            }
-            if (model.EndCount == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_EndCount", SqlDbType.Int, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_EndCount", SqlDbType.Int, 0)).Value = model.EndCount;
-            }
-            if (model.Price == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_Price", SqlDbType.Decimal, 18)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_Price", SqlDbType.Decimal, 18)).Value = model.Price;
-            }
-            if (model.FModel == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FModel", SqlDbType.NVarChar, 500)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FModel", SqlDbType.NVarChar, 500)).Value = model.FModel;
-            }
-            if (model.FUnit == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FUnit", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_FUnit", SqlDbType.NVarChar, 50)).Value = model.FUnit;
-            }
-            if (model.CoinType == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CoinType", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CoinType", SqlDbType.NVarChar, 50)).Value = model.CoinType;
-            }
-            if (model.MOQ == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_MOQ", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_MOQ", SqlDbType.NVarChar, 50)).Value = model.MOQ;
-            }
-            if (model.PPQ == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_PPQ", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_PPQ", SqlDbType.NVarChar, 50)).Value = model.PPQ;
-            }
-            if (model.LimitTimes == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_LimitTimes", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_LimitTimes", SqlDbType.NVarChar, 50)).Value = model.LimitTimes;
-            }
-            if (model.ApplyType == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ApplyType", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ApplyType", SqlDbType.NVarChar, 50)).Value = model.ApplyType;
-            }
-            if (model.TaskID == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_TaskID", SqlDbType.Int, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_TaskID", SqlDbType.Int, 0)).Value = model.TaskID;
-            }
-            if (model.PackageInfo == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_PackageInfo", SqlDbType.NVarChar, 500)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_PackageInfo", SqlDbType.NVarChar, 500)).Value = model.PackageInfo;
-            }
-            if (model.CostPrice == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CostPrice", SqlDbType.Decimal, 18)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CostPrice", SqlDbType.Decimal, 18)).Value = model.CostPrice;
-            }
-            if (model.CostCoinType == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CostCoinType", SqlDbType.NVarChar, 50)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_CostCoinType", SqlDbType.NVarChar, 50)).Value = model.CostCoinType;
-            }
-            if (model.ParentID == null)
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ParentID", SqlDbType.Int, 0)).Value = DBNull.Value;
-            }
-            else
-            {
-                cmd.Parameters.Add(new SqlParameter("@m_ParentID", SqlDbType.Int, 0)).Value = model.ParentID;
-            }
-
-            //输出参数
-            SqlParameter returnParam = cmd.Parameters.Add(new SqlParameter("@thisId", SqlDbType.Int));
-            returnParam.Direction = ParameterDirection.Output;
-            int returnId = -1;
-
-            try
-            {
-                cmd.ExecuteScalar();
-                returnId = Convert.ToInt32(cmd.Parameters["@thisId"].Value);
-            }
-            catch (Exception e) { throw new Exception(e.ToString()); }
-
-            cmd.Dispose();
-            con.Close();
-            con.Dispose();
-            return returnId;
-        }
+      
 
 
         /// <summary>
@@ -310,10 +105,10 @@ namespace JDWinService.Dal
         public void Update(JD_LimitPriceApply_Log model)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("UPDATE JD_LimitPriceApply_Log SET CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,IsUpdate = @m_IsUpdate,Operater = @m_Operater,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BeginCuPrice = @m_BeginCuPrice,EndCuPrice = @m_EndCuPrice,ItemName = @m_ItemName,ItemCode = @m_ItemCode,FromCount = @m_FromCount,EndCount = @m_EndCount,Price = @m_Price,FModel = @m_FModel,FUnit = @m_FUnit,CoinType = @m_CoinType,MOQ = @m_MOQ,PPQ = @m_PPQ,LimitTimes = @m_LimitTimes,ApplyType = @m_ApplyType,TaskID = @m_TaskID,PackageInfo = @m_PackageInfo,CostPrice = @m_CostPrice,CostCoinType = @m_CostCoinType,ParentID = @m_ParentID WHERE ItemID = @m_ItemID", con);
+            SqlCommand cmd = new SqlCommand("UPDATE JD_LimitPriceApply_Log SET CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,IsUpdate = @m_IsUpdate,Operater = @m_Operater,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BeginCuPrice = @m_BeginCuPrice,EndCuPrice = @m_EndCuPrice,ItemName = @m_ItemName,ItemCode = @m_ItemCode,FromCount = @m_FromCount,EndCount = @m_EndCount,Price = @m_Price,FModel = @m_FModel,FUnit = @m_FUnit,CoinType = @m_CoinType,MOQ = @m_MOQ,PPQ = @m_PPQ,LimitTimes = @m_LimitTimes,ApplyType = @m_ApplyType,TaskID = @m_TaskID,PackageInfo = @m_PackageInfo,CostPrice = @m_CostPrice,CostCoinType = @m_CostCoinType,ParentID = @m_ParentID,EffectiveDate = @m_EffectiveDate,PriceRemarks=@m_PriceRemarks WHERE ItemID = @m_ItemID", con);
             con.Open();
 
-            if (model.CreateTime == new DateTime())
+            if (model.CreateTime == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }
@@ -321,7 +116,7 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_CreateTime", SqlDbType.DateTime, 0)).Value = model.CreateTime;
             }
-            if (model.UpdateTime == new DateTime())
+            if (model.UpdateTime == null)
             {
                 cmd.Parameters.Add(new SqlParameter("@m_UpdateTime", SqlDbType.DateTime, 0)).Value = DBNull.Value;
             }
@@ -512,6 +307,23 @@ namespace JDWinService.Dal
             else
             {
                 cmd.Parameters.Add(new SqlParameter("@m_ParentID", SqlDbType.Int, 0)).Value = model.ParentID;
+            }
+            if (model.EffectiveDate == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_EffectiveDate", SqlDbType.DateTime, 0)).Value = model.EffectiveDate;
+            }
+
+            if (model.PriceRemarks == null)
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar, 100)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_PriceRemarks", SqlDbType.NVarChar,100)).Value = model.PriceRemarks;
             }
             cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = model.ItemID;
 
@@ -531,6 +343,14 @@ namespace JDWinService.Dal
         {
             string sql = string.Format(@" select  * from JD_LimitPriceApply_Log where IsUpdate='0'");
             return DBUtil.Query(sql).Tables[0].DefaultView;
+        }
+
+        //当数据的IsNew状态为"变更前"时 需要更新IsUpdate状态
+        public void UpdateStatusInNew()
+        {
+            string sql = "Update JD_LimitPriceApply_Log set IsUpdate='1' where IsNew='变更前' and IsUpdate='0'";
+            DBUtil.Execute(sql);
+            
         }
     }
 }

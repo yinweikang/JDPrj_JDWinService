@@ -85,15 +85,15 @@ namespace JDWinService.Dal
         }
 
 
-        public JD_PORequestManage Detail(string SNumber,string FNumber)
+        public JD_PORequestManage Detail(string SNumber,int ItemID)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_PORequestManage WHERE SNumber = @m_SNumber and FNumber=@m_FNumber", con);
+            SqlCommand cmd = new SqlCommand("SELECT * FROM JD_PORequestManage WHERE SNumber = @m_SNumber and ItemID=@m_ItemID", con);
             con.Open();
 
 
             cmd.Parameters.Add(new SqlParameter("@m_SNumber", SqlDbType.NVarChar, 50)).Value = SNumber;
-            cmd.Parameters.Add(new SqlParameter("@m_FNumber", SqlDbType.NVarChar, 50)).Value = FNumber;
+            cmd.Parameters.Add(new SqlParameter("@m_ItemID", SqlDbType.Int, 0)).Value = ItemID;
             JD_PORequestManage myDetail = new JD_PORequestManage();
             SqlDataReader myReader = cmd.ExecuteReader();
             if (myReader.Read())

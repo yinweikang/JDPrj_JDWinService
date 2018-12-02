@@ -27,6 +27,8 @@ namespace JDWinService.Model
             public string FEntrySelfP0279 { get; set; }
             public string FEntrySelfP0280 { get; set; }
             public string FEntrySelfP0285 { get; set; }
+
+            public string FEntrySelfP0286 { get; set; }
             public string FIsCheck { get; set; }
             public Fcheckmethod FCheckMethod { get; set; }
             public string FOutSourceEntryID { get; set; }

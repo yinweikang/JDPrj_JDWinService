@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using JDWinService.Model;
 using Newtonsoft.Json.Linq;
 using Kingdee.K3.API.SDK;
+using System.Threading;
+
 
 namespace JDWinService
 {
@@ -28,24 +30,40 @@ namespace JDWinService
             try
             {
                 isRun = true;
-                UpdateOrderEntry_Date();  //采购订单 交期变更
+                //TestToken();             //K3 API连接测试
+                UpdateOrderEntry_Date();   //采购订单 交期变更
                 UpdateSeorderEntry_Date(); //销售订单 交期表更
-                UpdateSeorderEntry();      //销售订单 数量和单价变更
-                UpdateSePrice();   //销售限价更新
-                AddSeOrderEntry();           //销售订单新增
-                // UpdatePORequest();  //请购单集成
-                OrderBGCheck(); //采购订单物料变更
-                //OrderBGNPICheck();         //采购订单NPI变更 
+
+                //供应链流程
+                UpdateCuPrice();           //采购限价应用更新 阶梯价
+                UpdateItemBySupplier();    //物料信息修改-供应链 
+                SupplierCheck();           //供应商新增或变更
+                PrivateNote();             //供应商流程备忘录
+
+                //请购流程
+                UpdatePORequest();         //请购单集成
+
+                //采购流程
+                OrderBGCheck();            //采购订单物料变更 
+                //AddPOOrderEntry();         //采购订单新增API 集成 
+                //OrderBGNPIAndOtherCheck(); //采购订单其他和NPI变更
+
+                //OrderBGNPICheck();         //采购订单NPI变更  
+
+                //UpdateSeorderEntry();      //销售订单 数量和单价变更
+                //UpdateSePrice();           //销售限价更新
+                //AddSeOrderEntry();         //销售订单新增
 
 
 
-                //SupplierCheck();           //供应商新增
-                //Test(); 
-                //AddPOOrderEntry();         //采购订单_物料 
+                //UpdateCustomer();          //客户新增或变更
+                //UpdatePORequestDel();      //请购单中删除不需要的数据 集成
 
-                //UpdateCuPrice();   //采购限价应用更新
-
-
+                //UpdateItemByPlan();        //物料信息修改-计划部
+                //UpdateItemByPrj();         //物料信息修改-工程部
+                //IcItemAdd();               //料号新建
+                //SupplierCredit();          //供应商超限额轮询
+                //Test();
             }
             catch (Exception ex)
             {
@@ -57,54 +75,92 @@ namespace JDWinService
             }
 
         }
+
+        public static void TestToken()
+        {
+            ApiEnvironment apiEnv = new ApiEnvironment();
+            apiEnv.init(APIUrl, APICode);
+            if (string.IsNullOrEmpty(apiEnv.Token))
+            {
+                Thread.Sleep(2000);
+            }
+        }
         //供应商新增轮询
         public static void SupplierCheck()
         {
 
-            SupplierDal supplierDal = new SupplierDal();
-            //获取需要操作的供应商数据
-            DataTable dt = common.GetUpdateTab("JD_Supplier", " and ApplyType='1'");
 
-            if (dt.Rows.Count > 0)
+            JD_Supplier_LogService service = new JD_Supplier_LogService();
+            DataView dv = service.GetDistinct();
+            int IsPart = 0;
+            int IsCG = 0;
+            if (dv.Count > 0)
             {
-                common.WriteLogs("--供应商开始--");
-                supplierDal.Save(dt, APIUrl, APICode);
-                common.WriteLogs("--供应商结束--");
+
+                ApiEnvironment apiEnv = new ApiEnvironment();
+                foreach (DataRowView dr in dv)
+                {
+                    //是分公司的话，用分公司的APICode
+
+                    IsPart = Convert.ToInt32((string.IsNullOrEmpty(dr["IsPart"].ToString()) ? "0" : dr["IsPart"].ToString()));
+                    common.WriteLogs("IsPart:" + IsPart.ToString());
+
+
+                    apiEnv.init(APIUrl, (IsPart == 0) ? APICode : APICodePart);
+                    IsCG = Convert.ToInt32((string.IsNullOrEmpty(dr["IsCGSupplier"].ToString()) ? "0" : dr["IsCGSupplier"].ToString()));
+
+                    service.HandleSupplier(
+                        Convert.ToInt32(dr["ItemID"].ToString()),
+                        APIUrl,
+                        "Supplier",
+                        apiEnv.Token,
+                        Common.FileType.供应商流程.ToString(),
+                        dr["ApplyType"].ToString(), IsCG);
+                }
             }
         }
 
         //采购订单变更(物料)轮询
         public static void OrderBGCheck()
         {
- 
+
 
             JD_OrderListBG_LogService service = new JD_OrderListBG_LogService();
             DataView dv = service.GetDistinctList();
             dv.RowFilter = " OrderListBGName='WL' ";
-            if (dv.Count > 0) {
+            if (dv.Count > 0)
+            {
                 common.WriteLogs(Common.FileType.采购订单变更_物料.ToString(), "--采购订单变更_物料开始--");
-                foreach (DataRowView dr in dv) {
+                foreach (DataRowView dr in dv)
+                {
                     service.UpdatePOEntry(dr["TaskID"].ToString(), dr["BGName"].ToString());
                 }
                 common.WriteLogs(Common.FileType.采购订单变更_物料.ToString(), "--采购订单变更_物料结束--");
             }
         }
 
+        //采购订单变更(其他和NPI)轮询
+        public static void OrderBGNPIAndOtherCheck()
+        {
+            JD_OrderListBG_LogService service = new JD_OrderListBG_LogService();
+            service.UpdateOrderBG();
+        }
+
         //采购订单变更(NPI)轮询
         public static void OrderBGNPICheck()
         {
-              
+
             JD_OrderListBG_LogService service = new JD_OrderListBG_LogService();
             DataView dv = service.GetDistinctList();
             dv.RowFilter = " OrderListBGName='NPI' ";
             if (dv.Count > 0)
             {
-                common.WriteLogs(Common.FileType.采购订单变更_NPI.ToString(), "--采购订单变更_NPI开始--");
+               
                 foreach (DataRowView dr in dv)
                 {
                     service.UpdateNPIPOEntry(dr["TaskID"].ToString());
                 }
-                common.WriteLogs(Common.FileType.采购订单变更_NPI.ToString(), "--采购订单变更_NPI结束--");
+             
             }
         }
 
@@ -142,36 +198,13 @@ namespace JDWinService
                 common.WriteLogs("--销售订单批量变更开始--");
                 foreach (DataRowView dr in dv)
                 {
-                    service.UpdateSeOrderEntry(Convert.ToInt32(dr["ItemID"]),Convert.ToInt32(dr["TaskID"]));
+                    service.UpdateSeOrderEntry(Convert.ToInt32(dr["ItemID"]), Convert.ToInt32(dr["TaskID"]));
                 }
                 common.WriteLogs("--销售订单批量变更结束--");
             }
         }
 
-        public static void Test()
-        {
-            //Json_SeOrder order = new Json_SeOrder();
-            //order.page1 = new Json_SeOrder.Page1()
-            //{
-            //    FBillerID = new Json_SeOrder.Fbillerid() {
-            //        FName = "1",
-            //        FNumber="4444"
 
-            //    }
-            //};
-            //common.WriteLogs( "QQQQQ:"+ JsonConvert.SerializeObject(order));
-
-            JD_OrderListApply_LogService service = new JD_OrderListApply_LogService();
-            DataView dv = service.GetDistinctList();
-            if (dv.Count > 0)
-            {
-                foreach (DataRowView dr in dv)
-                {
-                    service.AddOrderEntry(Convert.ToInt32(dr["TaskID"]), APIUrl, APICode, Common.FileType.采购订单_物料.ToString());
-                }
-            }
-            //service.Test(APIUrl, APICode);
-        }
 
         //采购订单交期批量变更 轮询 
         public static void UpdateOrderEntry_Date()
@@ -201,7 +234,7 @@ namespace JDWinService
         public static void AddSeOrderEntry()
         {
 
-          
+
             string ordernum = string.Empty;
             JD_SeorderApply_LogService service = new JD_SeorderApply_LogService();
             PPOrderEntryService ppservice = new PPOrderEntryService();
@@ -220,12 +253,22 @@ namespace JDWinService
                     {
                         service.Updateordernum(TaskID, ordernum);
                     }
-                    //更新K3 关联数量以及关闭状态
-                    if (!string.IsNullOrEmpty(dr["FInterID"].ToString()))
+                    #region 更新K3 关联数量以及关闭状态
+
+                    DataView dv2 = service.GetUpdateInfo(dr["TaskID"].ToString());
+                    if (dv2.Count > 0)
                     {
-                        decimal FCount = Convert.ToDecimal(dr["FQty"].ToString());
-                        ppservice.UpdateInSeorder(Convert.ToInt32(dr["FInterID"].ToString()), Convert.ToInt32(dr["FEntryID"].ToString()), FCount);
+                        foreach (DataRowView dr2 in dv2)
+                        {
+                            if (!string.IsNullOrEmpty(dr2["FInterID"].ToString()))
+                            {
+                                decimal FCount = Convert.ToDecimal(dr2["FQty"].ToString());
+                                ppservice.UpdateInSeorder(Convert.ToInt32(dr2["FInterID"].ToString()), Convert.ToInt32(dr2["FEntryID"].ToString()), FCount);
+                            }
+                        }
                     }
+                    #endregion
+
                 }
             }
         }
@@ -255,17 +298,6 @@ namespace JDWinService
                     {
                         //更新ordernum
                         service.Updateordernum(TaskID, ordernum);
-
-                        #region 更新请购单 关联数量以及是否关闭标志
-                        if (!string.IsNullOrEmpty((dr["REQType"].ToString())))
-                        {
-                            
-                            if (dr["REQType"].ToString() == "NPI" || dr["REQType"].ToString() == "QT")
-                            {
-                                service.UpdateFLinkQty(dr["FBillNo"].ToString(), dr["FNumber"].ToString(), Convert.ToDecimal(dr["FQty"].ToString()));
-                            }
-                        }
-                        #endregion 
                     }
                 }
             }
@@ -276,21 +308,18 @@ namespace JDWinService
         public static void UpdateCuPrice()
         {
             JD_CuPriceDetailService service = new JD_CuPriceDetailService();
+            //更新表中 变更前数据
+            service.UpdateStatusInNew();
             DataView dv = service.GetDistinctList();
             if (dv.Count > 0)
             {
-                common.WriteLogs(Common.FileType.采购限价申请.ToString(), "---采购限价申请更新开始---");
+                 
                 foreach (DataRowView dr in dv)
                 {
-                    //本地集成
-                    service.UpdateCuPrice(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.采购限价申请.ToString());
-                    //K3 物料信息集成
-                    service.UpdateItemInfo(dr["MOQ"].ToString(), dr["PPQ"].ToString(), dr["PackageInfo"].ToString(),
-                        dr["FNumber"].ToString(), dr["ItemID"].ToString());
-
-
+                    //本地集成 和 K3物料信息集成
+                    service.UpdateCuPrice(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.采购限价申请.ToString(), Convert.ToInt32(dr["TaskID"].ToString())); 
                 }
-                common.WriteLogs(Common.FileType.采购限价申请.ToString(), "---采购限价申请更新结束---");
+
             }
         }
 
@@ -316,14 +345,13 @@ namespace JDWinService
         {
             JD_PORequest_LogService service = new JD_PORequest_LogService();
             DataView dv = service.GetDistinctList();
-            #region 物料请购单更新
-            //dv.RowFilter = " REQType='WL' and LogType='Add' ";
+            #region 物料请购单更新 
             dv.RowFilter = " REQType='WL' ";
             if (dv.Count > 0)
             {
                 foreach (DataRowView dr in dv)
                 {
-                    service.UpdatePORequest_Apply(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.请购单_物料.ToString());
+                    service.UpdatePORequest_Apply(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.请购单_物料.ToString(), Convert.ToInt32(dr["TaskID"].ToString()));
                 }
             }
             #endregion
@@ -334,13 +362,125 @@ namespace JDWinService
             {
                 foreach (DataRowView dr in dv)
                 {
-                    service.UpdatePORequest_NumBG(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.请购单变更.ToString());
+                    service.UpdatePORequest_NumBG(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.请购单变更.ToString(), Convert.ToInt32(dr["TaskID"].ToString()));
                 }
             }
             #endregion
 
         }
 
+        public static void UpdateCustomer()
+        {
+            JD_Customer_LogService service = new JD_Customer_LogService();
+            DataView dv = service.GetDistinct();
 
+            #region 客户新增集成
+            dv.RowFilter = " LogType='Add'";
+            if (dv.Count > 0)
+            {
+                ApiEnvironment apiEnv = new ApiEnvironment();
+                apiEnv.init(APIUrl, APICode);
+                foreach (DataRowView dr in dv)
+                {
+
+                    service.CustomerAdd(
+                        Convert.ToInt32(dr["ItemID"].ToString()),
+                        APIUrl,
+                        "Customer",
+                        apiEnv.Token,
+                        Common.FileType.客户新增或变更流程.ToString()
+                      );
+                }
+            }
+            #endregion
+
+            #region 客户变更 本地集成在流程图中用控件完成  和K3数据库集成
+            dv.RowFilter = " LogType='Edit'";
+            if (dv.Count > 0)
+            {
+                foreach (DataRowView dr in dv)
+                {
+                    service.UpdateCustomer(Convert.ToInt32(dr["ItemID"].ToString()), Common.FileType.客户新增或变更流程.ToString());
+                }
+            }
+            #endregion
+        }
+
+
+        //删除请购单中 需要删除的数据
+        public static void UpdatePORequestDel()
+        {
+            JD_PORequest_DelService service = new JD_PORequest_DelService();
+            DataView dv = service.GetDistinct();
+            if (dv.Count > 0)
+            {
+                foreach (DataRowView dr in dv)
+                {
+                    service.HandleDel(dr["FInterID"].ToString(), dr["TaskID"].ToString());
+                }
+            }
+        }
+
+        //物料信息变更  供应链修改
+        public static void UpdateItemBySupplier()
+        {
+            JD_IcItemBGApply_LogService service = new JD_IcItemBGApply_LogService();
+            service.UpdateItemBySupply();
+        }
+
+        public static void UpdateItemByPlan()
+        {
+            JD_IcItemPlanBGApply_logService service = new JD_IcItemPlanBGApply_logService();
+            service.UpdateInfo();
+        }
+
+        public static void UpdateItemByPrj()
+        {
+            JD_IcItemPrjBGApply_LogService service = new JD_IcItemPrjBGApply_LogService();
+            service.UpdateItemInfo();
+        }
+
+        public static void IcItemAdd()
+        {
+            MaterialService service = new MaterialService();
+            service.IcItemAdd(APIUrl, APICode);
+            //MaterialDal dal = new MaterialDal();
+            //ApiEnvironment apiEnv = new ApiEnvironment();
+            //apiEnv.init(APIUrl, APICode);
+            //dal.Save(APIUrl,"Save", apiEnv.Token);
+        }
+
+        //供应商超限额
+        public static void SupplierCredit()
+        {
+            JD_OrderList_SupplierCredit_logService service = new JD_OrderList_SupplierCredit_logService();
+            service.SendBeyondMsg();
+        }
+
+        public static void PrivateNote()
+        {
+            JD_PrivateNoteDal dal = new JD_PrivateNoteDal();
+            dal.AddNewNote();
+        }
+
+        public static void Test()
+        {
+
+
+            //DataTable dt = AccessHelper.Query("select * from CHECKINOUT"); 
+            //foreach (DataRowView dr in dt.DefaultView)
+            //{
+
+            //}
+
+            //JD_PrjBomBGDal dal = new JD_PrjBomBGDal();
+            //dal.TestCheck(APIUrl, APICode);
+
+            //JD_CuPriceDetailDal dal = new JD_CuPriceDetailDal();
+            //dal.UpdateParentID();
+
+            JD_PrivateNoteDal dal = new JD_PrivateNoteDal();
+            dal.AddNewNote();
+        }
     }
 }

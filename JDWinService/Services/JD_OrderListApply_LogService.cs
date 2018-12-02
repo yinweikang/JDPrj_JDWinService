@@ -37,10 +37,12 @@ namespace JDWinService.Services
             dal.Updateordernum(TaskID, ordernum);
         }
 
-        public void UpdateFLinkQty(string SNumber, string FNumber, decimal FQty)
+        public void UpdateFLinkQty(string SNumber, int ItemID, decimal FQty)
         {
-            dal.UpdateFLinkQty(SNumber,   FNumber,   FQty);
+            dal.UpdateFLinkQty(SNumber, ItemID,   FQty);
         }
+
+       
         public void Test(string APIUrl, string APICode)
         {
             ApiEnvironment apiEnv = new ApiEnvironment();

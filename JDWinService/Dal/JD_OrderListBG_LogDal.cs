@@ -19,12 +19,663 @@ namespace JDWinService.Dal
 
         Common common = new Common();
         POOrderEntryDal dal = new POOrderEntryDal();
+     
+
+
+
+
         /// <summary>
-		/// 对象JD_OrderListBG_Log明细
-		/// 编写人：ywk
-		/// 编写日期：2018/8/8 星期三
-		/// </summary>
-		public JD_OrderListBG_Log Detail(int ItemID)
+        /// 采购订单物料变更  数量变更 价格变更 交期变更 拆单变更
+        /// </summary>
+        /// <param name="TaskID"></param>
+        /// <param name="BGName"></param>
+        public void UpdatePOEntry(string TaskID, string BGName)
+        {
+            //选出需要变更的数据
+            DataTable dt = GetLogList(TaskID, "WL");
+            string ErrorMsg = string.Empty;
+            try
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    switch (BGName)
+                    {
+                        //数量变更时 交期也能变更
+                        case "数量变更":
+                            Update_SL(dt);
+                            Update_JQ(dt);
+                            break;
+                        case "价格变更":
+                            Update_JG(dt);
+                            break;
+                        case "交期变更":
+                            Update_JQ(dt);
+                            break;
+                        case "拆单变更":
+                            Update_Split(dt, TaskID);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ErrorMsg = ex.Message;
+                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), "-----Error-----");
+                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), ex.Message);
+                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), "-----Error-----");
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(ErrorMsg))
+                {
+                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", ErrorMsg, false);
+                }
+                else
+                {
+                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", "操作成功", true);
+                }
+                UpdateStatus(TaskID);
+            }
+
+
+        }
+
+        /// <summary>
+        /// 采购订单变更-NPI 数量变更 价格变更 交期变更同时变更
+        /// 此方法具有拆分功能
+        /// </summary>
+        /// <param name="TaskID"></param>
+        public void UpdateNPIPOEntry(string TaskID)
+        {
+            string Error = string.Empty;
+            try
+            {
+                DataTable dt = GetLogList(TaskID, "NPI");
+                Update_NPI(dt, TaskID);
+            }
+            catch (Exception ex)
+            {
+                Error = ex.Message; 
+            }
+            finally
+            {
+                UpdateStatus(TaskID);
+                if (!string.IsNullOrEmpty(Error))
+                {
+                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", Error, false);
+                }
+                else
+                {
+                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", "操作成功", true);
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 采购订单变更-NPI和其他 数量变更 价格变更 交期变更同时变更
+        /// 数量变更导致 请购单关联数量的更新，已经用触发完成  JD_OrderListBG_Log 触发器tri_QtyBG
+        /// 此方法没有拆分功能 
+        /// </summary>
+        public void UpdateOrderBG()
+        {
+            #region 获取采购单为NPI或其他变更的数据源
+            string sql = string.Format(@" select * from JD_OrderListBG_Log where OrderListBGName<>'WL' and IsUpdate='0'");
+            DataView dv = DBUtil.Query(sql, connectionString).Tables[0].DefaultView;
+            #endregion
+
+            #region 更新数据  K3数量变更 价格变更 交期变更同时变更/BPM数量变更的
+            int ItemID = 0;
+            int TaskID = 0;
+            int FInterID = 0;
+            int FEntryID = 0;
+            string ErrorMsg = string.Empty;
+            string BGTypeName = string.Empty;
+            foreach (DataRowView dr in dv)
+            {
+                try
+                {
+                    ItemID = Convert.ToInt32(dr["ItemID"].ToString());
+                    TaskID = Convert.ToInt32(dr["TaskID"].ToString());
+                 
+                    JD_OrderListBG_Log model = Detail(ItemID);
+                    if (model != null)
+                    {
+                        BGTypeName = model.OrderListBGName;
+                        FInterID = Convert.ToInt32(model.FInterID);
+                        FEntryID= Convert.ToInt32(model.FEntryID);
+                        POOrderEntry entrymodel = dal.Detail(FInterID,FEntryID);
+                        #region 数量变更
+                        if (model.FAuxQty != (model.Count - model.FLinkCount))
+                        {
+                            entrymodel.FAuxQty = model.FAuxQty; //数量更新                           //数量变更后 关联数量跟着变更
+                            entrymodel.FCommitQty = entrymodel.FCommitQty - (model.Count - model.FAuxQty);
+                            //行关闭标志  显示不关闭
+                            entrymodel.FMrpClosed = 0;
+                            //表头关闭标志 更新
+                            UpdatePOOrder(model.FInterID);
+                        }
+                       
+
+                        #endregion
+                        entrymodel.FAuxPrice = model.FAuxPrice; //价格变更
+                        entrymodel.FDate = model.FDate;     //交货日期
+                        //单位数量间的换算
+                        entrymodel = LastUpdateModel(entrymodel);
+                        //更新变更
+                        dal.Update(entrymodel); 
+                    } 
+                }
+                catch (Exception ex) {
+                    ErrorMsg = ex.Message;
+                }
+                finally {
+                    if (!string.IsNullOrEmpty(ErrorMsg))
+                    {
+                        common.AddLogQueue(TaskID, "", ItemID, "SQL", "采购订单变更" + BGTypeName + ",更新成功！", true);
+                    }
+                    else
+                    {
+                        common.AddLogQueue(TaskID, "", ItemID, "SQL", "采购订单变更" + BGTypeName + ",更新失败！错误原因:"+ErrorMsg, false);
+                    }
+                }
+            }
+
+            #endregion
+        }
+
+
+        //采购物料变更-数量变更 2018-11-21
+        protected void Update_SL(DataTable dt)
+        {
+            POOrderEntry model = new POOrderEntry();
+            string tempsql = string.Empty;
+            string sql = string.Empty;
+            int FInterID = 0;
+            int FEntryID = 0;
+            decimal Empty = Convert.ToDecimal("0");
+            foreach (DataRow dr in dt.Rows)
+            {
+                if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
+                {
+                    FInterID = Convert.ToInt32(dr["FInterID"].ToString());
+                    FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
+                    model = dal.Detail(FInterID, FEntryID);
+                    model.FAuxQty = Math.Round(Convert.ToDecimal(dr["FAuxQty"].ToString()), 10); //数量更新
+                    //数量变更后 关联数量跟着变更
+                    model.FCommitQty = model.FCommitQty - (Math.Round(Convert.ToDecimal(dr["Count"].ToString()), 10) - Math.Round(Convert.ToDecimal(dr["FAuxQty"].ToString()), 10));
+                   //行关闭标志  显示不关闭
+                    model.FMrpClosed = 0;
+                    model = LastUpdateModel(model);
+                    dal.Update(model);
+                    //表头关闭标志 更新
+                    UpdatePOOrder(dr["FInterID"].ToString());
+                }
+            }
+        }
+
+
+        //更新采购订单表头的关闭标志 Y 改为 N
+        //ywk  2018-11-27
+        protected void UpdatePOOrder(string FInterID)
+        {
+            string sql = string.Format(@" update poorder set FHeadSelfP0252='N' where FInteID='{0}'", FInterID);
+            DBUtil.ExecuteSql(sql, K3connectionString);
+        }
+        /// <summary>
+        /// 采购订单数量变更
+        /// </summary>
+        /// <param name="dt"></param> 
+        protected void Update_FQty(DataTable dt, string TaskID)
+        {
+            POOrderEntry model = new POOrderEntry();
+            string tempsql = string.Empty;
+            string sql = string.Empty;
+            int FInterID = 0;
+            int FEntryID = 0;
+            int Count = 0;
+            decimal dateEmpty = Convert.ToDecimal("0");
+
+            //判断是否有拆分的订单 
+            DataView dvAll = dt.DefaultView;                                    //所有的数据集
+            DataView dv = dt.DefaultView.ToTable(true, "FEntryID", "FInterID").DefaultView; //无重复的数据集
+
+            foreach (DataRowView dr in dv)
+            {
+
+                //选出 FEntryID相同的数据集 大于1 被拆分 不然 未被拆分直接更新
+                dvAll.RowFilter = " FEntryID='" + dr["FEntryID"] + "'";
+
+                #region 订单已被拆分 需要更新并插入新的数据
+                //行号  
+                if (dvAll.Count > 1)
+                {
+                    Count = 0;
+                    decimal FirstData = Convert.ToDecimal("0");
+                    //遍历 FEntryID相同的数据集
+                    foreach (DataRowView dr2 in dvAll)
+                    {
+                        FInterID = Convert.ToInt32(dr["FInterID"].ToString());
+                        FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
+                        //第一个数量
+                        if (Count == 0)
+                        {
+                            //如果关联数量为0  更新数量为修改的数量 否则 更新数量为关联数量
+                            if (Convert.ToDecimal(dvAll[0]["FLinkCount"].ToString()) == dateEmpty)
+                            {
+                                FirstData = Convert.ToDecimal(dr2["FAuxQty"]);
+                            }
+                            else
+                            {
+                                FirstData = Convert.ToDecimal(dvAll[0]["FLinkCount"].ToString());
+                            }
+                            Update_FQtyInner(FInterID, FEntryID, FirstData);
+
+                            Count++;
+                        }
+                        //其余数量插入新的值
+                        else
+                        {
+                            model = dal.Detail(FInterID, FEntryID);
+                            POOrderEntry childMol = new POOrderEntry();
+                            childMol = model;
+                            childMol.FInterID = FInterID;
+                            childMol.FEntryID = GetMaxFEntryID(FInterID.ToString());
+                            childMol.FAuxQty = Convert.ToDecimal(dr2["FAuxQty"]);
+                            childMol = LastUpdateModel(childMol);
+                            dal.Add(childMol);
+                        }
+
+                        Count++;
+                        //若关联数量
+                    }
+                }
+                #endregion
+                #region 订单未被拆分 只是更新数量
+                else
+                {
+                    if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
+                    {
+                        Update_FQtyInner(Convert.ToInt32(dr["FInterID"].ToString()),
+                            Convert.ToInt32(dr["FEntryID"].ToString()),
+                            Math.Round(Convert.ToDecimal(dr["FAuxQty"].ToString()), 10));
+                    }
+                    //更新状态
+                }
+                #endregion
+
+            }
+            UpdateStatus(TaskID);
+        }
+
+        //数量更新
+        protected void Update_FQtyInner(int FInterID, int FEntryID, decimal FAuxQty)
+        {
+            POOrderEntry model = new POOrderEntry();
+            model = dal.Detail(FInterID, FEntryID);
+            model.FAuxQty = Math.Round(FAuxQty, 10); //数量更新
+            model = LastUpdateModel(model);
+            dal.Update(model);
+        }
+
+        //状态更新
+        protected void UpdateStatus(string TaskID)
+        {
+            string sql = string.Format(@"update JD_OrderListBG_Log set IsUpdate='{0}',UpdateTime='{1}' where TaskID='{2}' ",
+                "1", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), TaskID);
+            DBUtil.ExecuteSql(sql);
+        }
+        protected int GetMaxFEntryID(string FInterID)
+        {
+            string sql = string.Format(@"select MAX(FEntryID)+1 from POOrderEntry where FInterID='{0}'", FInterID);
+            object obj = DBUtil.GetSingle(sql, K3connectionString);
+            return (obj == null) ? 0 : int.Parse(obj.ToString());
+        }
+
+
+        //采购物料变更-价格变更 2018-11-21
+        protected void Update_JG(DataTable dt)
+        {
+            POOrderEntry model = new POOrderEntry();
+            string tempsql = string.Empty;
+            string sql = string.Empty;
+            int FInterID = 0;
+            int FEntryID = 0;
+            foreach (DataRow dr in dt.Rows)
+            {
+                if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
+                {
+
+                    FInterID = Convert.ToInt32(dr["FInterID"].ToString());
+                    FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
+                    model = dal.Detail(FInterID, FEntryID);
+                    model.FAuxPrice = Math.Round(Convert.ToDecimal(dr["FAuxPrice"].ToString()), 10); //价格变更
+                    model = LastUpdateModel(model);
+                    dal.Update(model);
+                }
+
+            }
+        }
+
+        //采购订单变更-交期变更 2018-11-21  
+        //只需要更新 首次确认交期和末次确认交期
+        protected void Update_JQ(DataTable dt)
+        {
+            POOrderEntry model = new POOrderEntry();
+            string tempsql = string.Empty;
+            string sql = string.Empty;
+            int FInterID = 0;
+            int FEntryID = 0;
+            foreach (DataRow dr in dt.Rows)
+            {
+                if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
+                {
+
+                    FInterID = Convert.ToInt32(dr["FInterID"].ToString());
+                    FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
+                    model = dal.Detail(FInterID, FEntryID);
+                    //首次确认交期不为空 更新
+                    if (!string.IsNullOrEmpty(dr["FirstConfirmDate"].ToString()))
+                    {
+                        model.FEntrySelfP0267 = Convert.ToDateTime(dr["FirstConfirmDate"].ToString());
+                    }
+                    //末次确认交期不为空 更新
+                    if (!string.IsNullOrEmpty(dr["LastConfirmDate"].ToString()))
+                    {
+                        model.FEntrySelfP0268 = Convert.ToDateTime(dr["LastConfirmDate"].ToString());
+                    }
+
+                    dal.Update(model);
+                }
+            }
+        }
+
+
+        //采购订单变更-拆单变更 2018-11-21
+        //拆单变更 数量变更 以及 交期变更
+        //拆分的同一单子 最大的值更新数量  其余的值新建对象 新增到K3中 
+        protected void Update_Split(DataTable dt, string TaskID)
+        {
+            POOrderEntryDal dal = new POOrderEntryDal();
+            POOrderEntry old_model = new POOrderEntry();  //原始的采购订单明细
+            //找出不重复的FEntryID  遍历
+            string sql = "select distinct FEntryID  from dbo.JD_OrderListBG_Log where TaskID='" + TaskID + "' order by FEntryID asc";
+            var FEntryIDs = DBUtil.Query(sql).Tables[0].AsEnumerable().Select(r => r["FEntryID"]).Distinct();
+
+            foreach (var item in FEntryIDs)
+            {
+                DataRow[] dr = dt.Select("FEntryID='" + item.ToString() + "'", "FAuxQty desc");
+                int Count = 0;
+                foreach (DataRow datarow in dr)
+                {
+                    //更新
+                    if (Count == 0)
+                    {
+
+                        old_model = dal.Detail(Convert.ToInt32(datarow["FInterID"].ToString()), Convert.ToInt32(item.ToString()));
+
+                        if (!String.IsNullOrEmpty(datarow["FirstConfirmDate"].ToString()))
+                        {
+                            old_model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FirstConfirmDate"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["LastConfirmDate"].ToString()))
+                        {
+                            old_model.FEntrySelfP0268 = Convert.ToDateTime(datarow["LastConfirmDate"].ToString());
+                        }
+
+                        old_model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10); //数量更新
+                        old_model = LastUpdateModel(old_model);
+                        dal.Update(old_model);
+                    }
+                    //插入
+                    else
+                    {
+
+                        //获取拆分订单中首个明细
+                        POOrderEntry model = dal.Detail(Convert.ToInt32(datarow["FInterID"]), Convert.ToInt32(item.ToString()));
+                        //带出Max(FEntryID)
+                        int MaxFEntryID = common.GetMaxID("FEntryID", "POOrderEntry", " where FInterID='" + datarow["FInterID"] + "' ");
+
+                        model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10);
+                        if (!String.IsNullOrEmpty(datarow["FirstConfirmDate"].ToString()))
+                        {
+                            model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FirstConfirmDate"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["LastConfirmDate"].ToString()))
+                        {
+                            model.FEntrySelfP0268 = Convert.ToDateTime(datarow["LastConfirmDate"].ToString());
+                        }
+
+                        decimal zero = Convert.ToDecimal(0.00);
+
+                        model.FEntryID = MaxFEntryID;  //行号更新
+                        model.FCommitQty = model.FCheckAmount = model.FAuxCommitQty = model.FStockQty = model.FAuxStockQty = model.FQtyInvoice = model.FReceiveAmountFor_Commit = model.FReceiveAmount_Commit = model.FAuxQtyInvoice = model.FAuxReceiptQty = model.FReceiptQty = model.FAuxReturnQty = model.FReturnQty = model.FAmountExceptDisCount = model.FAllAmountExceptDisCount = zero;
+                        model = LastUpdateModel(model);
+                        dal.Add(model);
+
+                    }
+
+                    Count++;
+                }
+
+            }
+        }
+        /// <summary> 
+        /// 采购订单变更-交期变更
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <param name="TaskID">主表ID</param>
+        protected void Update_JQ(DataTable dt, string TaskID)
+        {
+            POOrderEntryDal dal = new POOrderEntryDal();
+            POOrderEntry old_model = new POOrderEntry();  //原始的采购订单明细
+            //找出不重复的FEntryID  遍历
+            string sql = "select distinct FEntryID  from dbo.JD_OrderListBG_Log where TaskID='" + TaskID + "' order by FEntryID asc";
+
+            var FEntryIDs = DBUtil.Query(sql).Tables[0].AsEnumerable().Select(r => r["FEntryID"]).Distinct();
+            foreach (var item in FEntryIDs)
+            {
+                DataRow[] dr = dt.Select("FEntryID='" + item.ToString() + "'", "FAuxQty desc");
+                int Count = 0;
+                foreach (DataRow datarow in dr)
+                {
+                    //更新
+                    if (Count == 0)
+                    {
+
+                        old_model = dal.Detail(Convert.ToInt32(datarow["FInterID"].ToString()), Convert.ToInt32(item.ToString()));
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
+                        {
+                            old_model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
+                        {
+                            old_model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
+                        {
+                            old_model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
+                        }
+                        old_model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10); //数量更新
+                        old_model = LastUpdateModel(old_model);
+                        dal.Update(old_model);
+                    }
+                    //插入
+                    else
+                    {
+
+                        //获取拆分订单中首个明细
+                        POOrderEntry model = dal.Detail(Convert.ToInt32(datarow["FInterID"]), Convert.ToInt32(item.ToString()));
+                        //带出Max(FEntryID)
+                        int MaxFEntryID = common.GetMaxID("FEntryID", "POOrderEntry", " where FInterID='" + datarow["FInterID"] + "' ");
+
+                        model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10);
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
+                        {
+                            model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
+                        {
+                            model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
+                        {
+                            model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
+                        }
+                        decimal zero = Convert.ToDecimal(0.00);
+
+                        model.FEntryID = MaxFEntryID;  //行号更新
+                        model.FCommitQty = model.FCheckAmount = model.FAuxCommitQty = model.FStockQty = model.FAuxStockQty = model.FQtyInvoice = model.FReceiveAmountFor_Commit = model.FReceiveAmount_Commit = model.FAuxQtyInvoice = model.FAuxReceiptQty = model.FReceiptQty = model.FAuxReturnQty = model.FReturnQty = model.FAmountExceptDisCount = model.FAllAmountExceptDisCount = zero;
+                        model = LastUpdateModel(model);
+                        dal.Add(model);
+
+                    }
+
+                    Count++;
+                }
+
+            }
+        }
+
+        //NPI变更 
+        //数量变更导致请购单关联量变更 已用触发器完成
+        protected void Update_NPI(DataTable dt, string TaskID)
+        {
+
+            POOrderEntryDal dal = new POOrderEntryDal();
+            POOrderEntry old_model = new POOrderEntry();  //原始的采购订单明细
+
+            string sql = "select distinct FEntryID  from dbo.JD_OrderListBG_Log where TaskID='" + TaskID + "' order by FEntryID asc";
+            var FEntryIDs = DBUtil.Query(sql).Tables[0].AsEnumerable().Select(r => r["FEntryID"]).Distinct();
+            foreach (var item in FEntryIDs)
+            {
+                DataRow[] dr = dt.Select("FEntryID='" + item.ToString() + "'", "FAuxQty desc");
+                int Count = 0;
+                foreach (DataRow datarow in dr)
+                {
+                    //更新
+                    if (Count == 0)
+                    {
+                        
+                        old_model = dal.Detail(Convert.ToInt32(datarow["FInterID"].ToString()), Convert.ToInt32(item.ToString()));
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
+                        {
+                            old_model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
+                        {
+                            old_model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
+                        {
+                            old_model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
+                        }
+                        old_model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10); //数量更新
+                        old_model = LastUpdateModel(old_model);
+
+                        //数量变更后 关联数量跟着变更
+                        old_model.FCommitQty = old_model.FCommitQty - (Math.Round(Convert.ToDecimal(datarow["Count"].ToString()), 10) - Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10));
+                        //行关闭标志  显示不关闭
+                        old_model.FMrpClosed = 0;
+                        old_model = LastUpdateModel(old_model);
+                      
+                        //表头关闭标志 更新
+                        UpdatePOOrder(datarow["FInterID"].ToString()); 
+                        dal.Update(old_model);
+                    }
+                    //插入
+                    else
+                    {
+
+                        //获取拆分订单中首个明细
+                        POOrderEntry model = dal.Detail(Convert.ToInt32(datarow["FInterID"]), Convert.ToInt32(item.ToString()));
+                        //带出Max(FEntryID)
+                        int MaxFEntryID = common.GetMaxID("FEntryID", "POOrderEntry", " where FInterID='" + datarow["FInterID"] + "' ");
+
+                        model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10);
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
+                        {
+                            model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
+                        }
+                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
+                        {
+                            model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
+                        {
+                            model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
+                        }
+                        decimal zero = Convert.ToDecimal(0.00);
+
+                        model.FEntryID = MaxFEntryID;  //行号更新
+                        model.FCommitQty = model.FCheckAmount = model.FAuxCommitQty = model.FStockQty = model.FAuxStockQty = model.FQtyInvoice = model.FReceiveAmountFor_Commit = model.FReceiveAmount_Commit = model.FAuxQtyInvoice = model.FAuxReceiptQty = model.FReceiptQty = model.FAuxReturnQty = model.FReturnQty = model.FAmountExceptDisCount = model.FAllAmountExceptDisCount = zero;
+                        model = LastUpdateModel(model);
+                        dal.Add(model);
+
+                    }
+
+                    Count++;
+                }
+
+
+            }
+
+        }
+        protected DataTable MeasureUnit(string UnitName)
+        {
+            string Sql = string.Format(@" select FName,FCoefficient from t_measureUnit where FStandard='0' and FName='{0}' ", UnitName);
+            return DBUtil.Query(Sql, K3connectionString).Tables[0];
+        }
+
+        //采购订单明细最后更新 更新相关基础信息
+        protected POOrderEntry LastUpdateModel(POOrderEntry model)
+        {
+
+            #region   FQty数量初始化
+            DataTable dtable = MeasureUnit(model.FUnitID.ToString());
+            model.FPrice = model.FAuxPrice;
+            if (dtable.Rows.Count > 0)
+            {
+                decimal FAuxQty = Convert.ToDecimal(model.FAuxQty); //数量变更时候 要初始值
+                decimal Convertion = Convert.ToDecimal(dtable.Rows[0]["FCoefficient"].ToString());
+                model.FQty = Math.Round(FAuxQty * Convertion, 10);
+                model.FPrice = Math.Round(model.FAuxPrice * Convertion, 10);
+            }
+            else
+            {
+                model.FQty = model.FAuxQty;
+            }
+            #endregion
+            decimal Fcess = Convert.ToDecimal(100.00);
+            decimal Fcess2 = Convert.ToDecimal(100 + model.FCess) / Fcess;
+
+            model.FAmount = Math.Round(model.FQty * model.FPrice, 2);
+            model.FTaxAmount = Math.Round(model.FAmount * Math.Round(model.FCess / Fcess, 6), 2);
+            model.FAllAmount = model.FAmount + model.FTaxAmount;
+
+
+
+            model.FAuxTaxPrice = model.FPrice + model.FPrice * Math.Round(model.FCess / Fcess, 10);
+            model.FTaxPrice = model.FAuxTaxPrice;
+
+            model.FAuxPriceDiscount = model.FAuxTaxPrice;
+            model.FPriceDiscount = model.FTaxPrice;
+
+            model.FAllAmountExceptDisCount = model.FPriceDiscount * model.FQty;
+            model.FAmountExceptDisCount = Math.Round(model.FAllAmountExceptDisCount / Fcess2, 4);
+            return model;
+        }
+
+
+        /// <summary>
+        /// 对象JD_OrderListBG_Log明细
+        /// 编写人：ywk
+        /// 编写日期：2018/8/8 星期三
+        /// </summary>
+        public JD_OrderListBG_Log Detail(int ItemID)
         {
             SqlConnection con = new SqlConnection(connectionString);
             SqlCommand cmd = new SqlCommand("SELECT * FROM JD_OrderListBG_Log WHERE ItemID = @m_ItemID", con);
@@ -67,13 +718,16 @@ namespace JDWinService.Dal
                 if (!Convert.IsDBNull(myReader["FInterID"])) { myDetail.FInterID = Convert.ToString(myReader["FInterID"]); }
                 if (!Convert.IsDBNull(myReader["FEntryID"])) { myDetail.FEntryID = Convert.ToString(myReader["FEntryID"]); }
                 if (!Convert.IsDBNull(myReader["FEntrySelfP0267"])) { myDetail.FEntrySelfP0267 = Convert.ToDateTime(myReader["FEntrySelfP0267"]); }
+                if (!Convert.IsDBNull(myReader["FirstConfirmDate"])) { myDetail.FirstConfirmDate = Convert.ToDateTime(myReader["FirstConfirmDate"]); }
                 if (!Convert.IsDBNull(myReader["FEntrySelfP0268"])) { myDetail.FEntrySelfP0268 = Convert.ToDateTime(myReader["FEntrySelfP0268"]); }
+                if (!Convert.IsDBNull(myReader["LastConfirmDate"])) { myDetail.LastConfirmDate = Convert.ToDateTime(myReader["LastConfirmDate"]); }
                 if (!Convert.IsDBNull(myReader["FPOHighPrice"])) { myDetail.FPOHighPrice = Convert.ToDecimal(myReader["FPOHighPrice"]); }
                 if (!Convert.IsDBNull(myReader["FPrice"])) { myDetail.FPrice = Convert.ToDecimal(myReader["FPrice"]); }
                 if (!Convert.IsDBNull(myReader["FCoefficient"])) { myDetail.FCoefficient = Convert.ToDecimal(myReader["FCoefficient"]); }
                 if (!Convert.IsDBNull(myReader["FLinkCount"])) { myDetail.FLinkCount = Convert.ToDecimal(myReader["FLinkCount"]); }
                 if (!Convert.IsDBNull(myReader["OrderListBGName"])) { myDetail.OrderListBGName = Convert.ToString(myReader["OrderListBGName"]); }
-
+                if (!Convert.IsDBNull(myReader["BPMSourceNo"])) { myDetail.BPMSourceNo = Convert.ToString(myReader["BPMSourceNo"]); }
+                if (!Convert.IsDBNull(myReader["BPMItemID"])) { myDetail.BPMItemID = Convert.ToString(myReader["BPMItemID"]); }
             }
 
             myReader.Close();
@@ -94,7 +748,7 @@ namespace JDWinService.Dal
         public void Update(JD_OrderListBG_Log model)
         {
             SqlConnection con = new SqlConnection(connectionString);
-            SqlCommand cmd = new SqlCommand("UPDATE JD_OrderListBG_Log SET TaskID = @m_TaskID,IsUpdate = @m_IsUpdate,CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,Operater = @m_Operater,OperateTime = @m_OperateTime,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BGType = @m_BGType,AllPrice = @m_AllPrice,BGName = @m_BGName,FBillNo = @m_FBillNo,SN = @m_SN,Attachments = @m_Attachments,WuLiaoNum = @m_WuLiaoNum,GuiGe = @m_GuiGe,FAuxQty = @m_FAuxQty,Count = @m_Count,Unit = @m_Unit,FAuxPrice = @m_FAuxPrice,Price = @m_Price,ActualPrice = @m_ActualPrice,SendDate = @m_SendDate,FDate = @m_FDate,BGMarks = @m_BGMarks,FInterID = @m_FInterID,FEntryID = @m_FEntryID,FEntrySelfP0267 = @m_FEntrySelfP0267,FEntrySelfP0268 = @m_FEntrySelfP0268,FPOHighPrice = @m_FPOHighPrice,FPrice = @m_FPrice,FCoefficient = @m_FCoefficient,FLinkCount = @m_FLinkCount,OrderListBGName = @m_OrderListBGName WHERE ItemID = @m_ItemID", con);
+            SqlCommand cmd = new SqlCommand("UPDATE JD_OrderListBG_Log SET TaskID = @m_TaskID,IsUpdate = @m_IsUpdate,CreateTime = @m_CreateTime,UpdateTime = @m_UpdateTime,Operater = @m_Operater,OperateTime = @m_OperateTime,SupplierName = @m_SupplierName,SupplierCode = @m_SupplierCode,BGType = @m_BGType,AllPrice = @m_AllPrice,BGName = @m_BGName,FBillNo = @m_FBillNo,SN = @m_SN,Attachments = @m_Attachments,WuLiaoNum = @m_WuLiaoNum,GuiGe = @m_GuiGe,FAuxQty = @m_FAuxQty,Count = @m_Count,Unit = @m_Unit,FAuxPrice = @m_FAuxPrice,Price = @m_Price,ActualPrice = @m_ActualPrice,SendDate = @m_SendDate,FDate = @m_FDate,BGMarks = @m_BGMarks,FInterID = @m_FInterID,FEntryID = @m_FEntryID,FEntrySelfP0267 = @m_FEntrySelfP0267,FirstConfirmDate = @m_FirstConfirmDate,FEntrySelfP0268 = @m_FEntrySelfP0268,LastConfirmDate = @m_LastConfirmDate,FPOHighPrice = @m_FPOHighPrice,FPrice = @m_FPrice,FCoefficient = @m_FCoefficient,FLinkCount = @m_FLinkCount,OrderListBGName = @m_OrderListBGName WHERE ItemID = @m_ItemID", con);
             con.Open();
 
             if (model.TaskID == null)
@@ -321,6 +975,14 @@ namespace JDWinService.Dal
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0267", SqlDbType.DateTime, 0)).Value = model.FEntrySelfP0267;
             }
+            if (model.FirstConfirmDate == new DateTime())
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_FirstConfirmDate", SqlDbType.DateTime, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_FirstConfirmDate", SqlDbType.DateTime, 0)).Value = model.FirstConfirmDate;
+            }
             if (model.FEntrySelfP0268 == new DateTime())
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0268", SqlDbType.DateTime, 0)).Value = DBNull.Value;
@@ -328,6 +990,14 @@ namespace JDWinService.Dal
             else
             {
                 cmd.Parameters.Add(new SqlParameter("@m_FEntrySelfP0268", SqlDbType.DateTime, 0)).Value = model.FEntrySelfP0268;
+            }
+            if (model.LastConfirmDate == new DateTime())
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_LastConfirmDate", SqlDbType.DateTime, 0)).Value = DBNull.Value;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@m_LastConfirmDate", SqlDbType.DateTime, 0)).Value = model.LastConfirmDate;
             }
             if (model.FPOHighPrice == null)
             {
@@ -378,6 +1048,8 @@ namespace JDWinService.Dal
             con.Dispose();
         }
 
+
+
         public void UpdateStatus(int TaskID)
         {
             string sql = string.Format(@"update JD_OrderListBG_Log set IsUpdate='1' where TaskID='{0}'", TaskID.ToString());
@@ -394,434 +1066,6 @@ namespace JDWinService.Dal
         {
             string sql = string.Format(@" select * from JD_OrderListBG_Log where IsUpdate='0' and TaskID='" + TaskID + "' and OrderListBGName='" + OrderListBGName + "' ");
             return DBUtil.Query(sql).Tables[0];
-        }
-
-
-
-        /// <summary>
-        /// 采购订单物料变更
-        /// </summary>
-        /// <param name="TaskID"></param>
-        /// <param name="BGName"></param>
-        public void UpdatePOEntry(string TaskID, string BGName)
-        {
-            //选出需要变更的数据
-            DataTable dt = GetLogList(TaskID, "WL");
-            string ErrorMsg = string.Empty;
-            try
-            {
-                if (dt.Rows.Count > 0)
-                {
-                    switch (BGName)
-                    {
-                        case "数量变更":
-                            Update_SL(dt);
-                            break;
-                        case "价格变更":
-                            Update_JG(dt);
-                            break;
-                        case "交期变更":
-                            Update_JQ(dt, TaskID);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ErrorMsg = ex.Message;
-                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), "-----Error-----");
-                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), ex.Message);
-                common.WriteLogs(Common.FileType.采购订单_物料.ToString(), "-----Error-----");
-            }
-            finally
-            {
-                if (!string.IsNullOrEmpty(ErrorMsg))
-                {
-                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", ErrorMsg, false);
-                }
-                else
-                {
-                    common.AddLogQueue(Convert.ToInt32(TaskID), "JD_OrderListBG_Log", 0, "SQL", "操作成功", true);
-                }
-                UpdateStatus(TaskID);
-            }
-
-
-        }
-
-        public void UpdateNPIPOEntry(string TaskID)
-        {
-             
-            try
-            {
-                DataTable dt = GetLogList(TaskID, "NPI");
-                Update_NPI(dt, TaskID);
-            }
-            catch (Exception ex)
-            {
-                common.WriteLogs("采购订单NPI变更Error:" + ex.Message);
-            }
-            finally
-            {
-                UpdateStatus(TaskID);
-            }
-
-        }
-
-
-        protected void Update_SL(DataTable dt)
-        {
-            POOrderEntry model = new POOrderEntry();
-            string tempsql = string.Empty;
-            string sql = string.Empty;
-            int FInterID = 0;
-            int FEntryID = 0;
-            foreach (DataRow dr in dt.Rows)
-            {
-                if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
-                {
-                    FInterID = Convert.ToInt32(dr["FInterID"].ToString());
-                    FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
-                    model = dal.Detail(FInterID, FEntryID);
-                    model.FAuxQty = Math.Round(Convert.ToDecimal(dr["FAuxQty"].ToString()), 10); //数量更新
-                    model = LastUpdateModel(model);
-                    dal.Update(model);
-                }
-            }
-        }
-        /// <summary>
-        /// 采购订单数量变更
-        /// </summary>
-        /// <param name="dt"></param> 
-        protected void Update_FQty(DataTable dt, string TaskID)
-        {
-            POOrderEntry model = new POOrderEntry();
-            string tempsql = string.Empty;
-            string sql = string.Empty;
-            int FInterID = 0;
-            int FEntryID = 0;
-            int Count = 0;
-            decimal dateEmpty = Convert.ToDecimal("0");
-
-            //判断是否有拆分的订单 
-            DataView dvAll = dt.DefaultView;                                    //所有的数据集
-            DataView dv = dt.DefaultView.ToTable(true, "FEntryID", "FInterID").DefaultView; //无重复的数据集
-
-            foreach (DataRowView dr in dv)
-            {
-
-                //选出 FEntryID相同的数据集 大于1 被拆分 不然 未被拆分直接更新
-                dvAll.RowFilter = " FEntryID='" + dr["FEntryID"] + "'";
-
-                #region 订单已被拆分 需要更新并插入新的数据
-                //行号  
-                if (dvAll.Count > 1)
-                {
-                    Count = 0;
-                    decimal FirstData = Convert.ToDecimal("0");
-                    //遍历 FEntryID相同的数据集
-                    foreach (DataRowView dr2 in dvAll)
-                    {
-                        FInterID = Convert.ToInt32(dr["FInterID"].ToString());
-                        FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
-                        //第一个数量
-                        if (Count == 0)
-                        {
-                            //如果关联数量为0  更新数量为修改的数量 否则 更新数量为关联数量
-                            if (Convert.ToDecimal(dvAll[0]["FLinkCount"].ToString()) == dateEmpty)
-                            {
-                                FirstData = Convert.ToDecimal(dr2["FAuxQty"]);
-                            }
-                            else
-                            {
-                                FirstData = Convert.ToDecimal(dvAll[0]["FLinkCount"].ToString());
-                            }
-                            Update_FQtyInner(FInterID, FEntryID, FirstData);
-
-                            Count++;
-                        }
-                        //其余数量插入新的值
-                        else
-                        {
-                            model = dal.Detail(FInterID, FEntryID);
-                            POOrderEntry childMol = new POOrderEntry();
-                            childMol = model;
-                            childMol.FInterID = FInterID;
-                            childMol.FEntryID = GetMaxFEntryID(FInterID.ToString());
-                            childMol.FAuxQty = Convert.ToDecimal(dr2["FAuxQty"]);
-                            childMol = LastUpdateModel(childMol);
-                            dal.Add(childMol);
-                        }
-
-                        Count++;
-                        //若关联数量
-                    }
-                }
-                #endregion
-                #region 订单未被拆分 只是更新数量
-                else
-                {
-                    if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
-                    {
-                        Update_FQtyInner(Convert.ToInt32(dr["FInterID"].ToString()),
-                            Convert.ToInt32(dr["FEntryID"].ToString()),
-                            Math.Round(Convert.ToDecimal(dr["FAuxQty"].ToString()), 10));
-                    }
-                    //更新状态
-                }
-                #endregion
-
-            }
-            UpdateStatus(TaskID);
-        }
-
-        //数量更新
-        protected void Update_FQtyInner(int FInterID, int FEntryID, decimal FAuxQty)
-        {
-            POOrderEntry model = new POOrderEntry();
-            model = dal.Detail(FInterID, FEntryID);
-            model.FAuxQty = Math.Round(FAuxQty, 10); //数量更新
-            model = LastUpdateModel(model);
-            dal.Update(model);
-        }
-
-        //状态更新
-        protected void UpdateStatus(string TaskID)
-        {
-            string sql = string.Format(@"update JD_OrderListBG_Log set IsUpdate='{0}',UpdateTime='{1}' where TaskID='{2}' ",
-                "1", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), TaskID);
-            DBUtil.ExecuteSql(sql);
-        }
-        protected int GetMaxFEntryID(string FInterID)
-        {
-            string sql = string.Format(@"select MAX(FEntryID)+1 from POOrderEntry where FInterID='{0}'", FInterID);
-            object obj = DBUtil.GetSingle(sql, K3connectionString);
-            return (obj == null) ? 0 : int.Parse(obj.ToString());
-        }
-
-
-        //价格变更
-        protected void Update_JG(DataTable dt)
-        {
-            POOrderEntry model = new POOrderEntry();
-            string tempsql = string.Empty;
-            string sql = string.Empty;
-            int FInterID = 0;
-            int FEntryID = 0;
-            foreach (DataRow dr in dt.Rows)
-            {
-                if (!string.IsNullOrEmpty(dr["WuLiaoNum"].ToString()))
-                {
-                    //sql = string.Format(@"update POOrderEntry set FAuxPrice='{0}' where FInterID='{1}' and FEntryID='{2}'",
-                    //            dr["FAuxPrice"].ToString(), dr["FInterID"].ToString(), dr["FEntryID"].ToString());
-                    FInterID = Convert.ToInt32(dr["FInterID"].ToString());
-                    FEntryID = Convert.ToInt32(dr["FEntryID"].ToString());
-                    model = dal.Detail(FInterID, FEntryID);
-                    model.FAuxPrice = Math.Round(Convert.ToDecimal(dr["FAuxPrice"].ToString()), 10); //价格变更
-                    model = LastUpdateModel(model);
-                    dal.Update(model);
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// 交期变更
-        /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="TaskID">主表ID</param>
-        protected void Update_JQ(DataTable dt, string TaskID)
-        {
-            POOrderEntryDal dal = new POOrderEntryDal();
-            POOrderEntry old_model = new POOrderEntry();  //原始的采购订单明细
-            //找出不重复的FEntryID  遍历
-            string sql = "select distinct FEntryID  from dbo.JD_OrderListBG_Log where TaskID='" + TaskID + "' order by FEntryID asc";
-
-            var FEntryIDs = DBUtil.Query(sql).Tables[0].AsEnumerable().Select(r => r["FEntryID"]).Distinct();
-            foreach (var item in FEntryIDs)
-            {
-                DataRow[] dr = dt.Select("FEntryID='" + item.ToString() + "'", "FAuxQty desc");
-                int Count = 0;
-                foreach (DataRow datarow in dr)
-                {
-                    //更新
-                    if (Count == 0)
-                    {
-
-                        old_model = dal.Detail(Convert.ToInt32(datarow["FInterID"].ToString()), Convert.ToInt32(item.ToString()));
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
-                        {
-                            old_model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
-                        }
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
-                        {
-                            old_model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
-                        }
-                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
-                        {
-                            old_model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
-                        }
-                        old_model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10); //数量更新
-                        old_model = LastUpdateModel(old_model);
-                        dal.Update(old_model);
-                    }
-                    //插入
-                    else
-                    {
-
-                        //获取拆分订单中首个明细
-                        POOrderEntry model = dal.Detail(Convert.ToInt32(datarow["FInterID"]), Convert.ToInt32(item.ToString()));
-                        //带出Max(FEntryID)
-                        int MaxFEntryID = common.GetMaxID("FEntryID", "POOrderEntry", " where FInterID='" + datarow["FInterID"] + "' ");
-
-                        model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10);
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
-                        {
-                            model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
-                        }
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
-                        {
-                            model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
-                        }
-                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
-                        {
-                            model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
-                        }
-                        decimal zero = Convert.ToDecimal(0.00);
-
-                        model.FEntryID = MaxFEntryID;  //行号更新
-                        model.FCommitQty = model.FCheckAmount = model.FAuxCommitQty = model.FStockQty = model.FAuxStockQty = model.FQtyInvoice = model.FReceiveAmountFor_Commit = model.FReceiveAmount_Commit = model.FAuxQtyInvoice = model.FAuxReceiptQty = model.FReceiptQty = model.FAuxReturnQty = model.FReturnQty = model.FAmountExceptDisCount = model.FAllAmountExceptDisCount = zero;
-                        model = LastUpdateModel(model);
-                        dal.Add(model);
-
-                    }
-
-                    Count++;
-                }
-
-            }
-        }
-
-        //NPI变更
-        protected void Update_NPI(DataTable dt, string TaskID)
-        {
-
-            POOrderEntryDal dal = new POOrderEntryDal();
-            POOrderEntry old_model = new POOrderEntry();  //原始的采购订单明细
-
-            string sql = "select distinct FEntryID  from dbo.JD_OrderListBG_Log where TaskID='" + TaskID + "' order by FEntryID asc"; 
-            var FEntryIDs = DBUtil.Query(sql).Tables[0].AsEnumerable().Select(r => r["FEntryID"]).Distinct();
-            foreach (var item in FEntryIDs)
-            {
-                DataRow[] dr = dt.Select("FEntryID='" + item.ToString() + "'", "FAuxQty desc");
-                int Count = 0;
-                foreach (DataRow datarow in dr)
-                {
-                    //更新
-                    if (Count == 0)
-                    {
-
-                        old_model = dal.Detail(Convert.ToInt32(datarow["FInterID"].ToString()), Convert.ToInt32(item.ToString()));
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
-                        {
-                            old_model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
-                        }
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
-                        {
-                            old_model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
-                        }
-                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
-                        {
-                            old_model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
-                        }
-                        old_model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10); //数量更新
-                        old_model = LastUpdateModel(old_model);
-                        dal.Update(old_model);
-                    }
-                    //插入
-                    else
-                    {
-
-                        //获取拆分订单中首个明细
-                        POOrderEntry model = dal.Detail(Convert.ToInt32(datarow["FInterID"]), Convert.ToInt32(item.ToString()));
-                        //带出Max(FEntryID)
-                        int MaxFEntryID = common.GetMaxID("FEntryID", "POOrderEntry", " where FInterID='" + datarow["FInterID"] + "' ");
-
-                        model.FAuxQty = Math.Round(Convert.ToDecimal(datarow["FAuxQty"].ToString()), 10);
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0267"].ToString()))
-                        {
-                            model.FEntrySelfP0267 = Convert.ToDateTime(datarow["FEntrySelfP0267"].ToString());
-                        }
-                        if (!String.IsNullOrEmpty(datarow["FEntrySelfP0268"].ToString()))
-                        {
-                            model.FEntrySelfP0268 = Convert.ToDateTime(datarow["FEntrySelfP0268"].ToString());
-                        }
-                        if (!string.IsNullOrEmpty(datarow["FDate"].ToString()))
-                        {
-                            model.FDate = Convert.ToDateTime(datarow["FDate"].ToString());
-                        }
-                        decimal zero = Convert.ToDecimal(0.00);
-
-                        model.FEntryID = MaxFEntryID;  //行号更新
-                        model.FCommitQty = model.FCheckAmount = model.FAuxCommitQty = model.FStockQty = model.FAuxStockQty = model.FQtyInvoice = model.FReceiveAmountFor_Commit = model.FReceiveAmount_Commit = model.FAuxQtyInvoice = model.FAuxReceiptQty = model.FReceiptQty = model.FAuxReturnQty = model.FReturnQty = model.FAmountExceptDisCount = model.FAllAmountExceptDisCount = zero;
-                        model = LastUpdateModel(model);
-                        dal.Add(model);
-
-                    }
-
-                    Count++;
-                }
-
-
-            }
-
-        }
-        protected DataTable MeasureUnit(string UnitName)
-        {
-            string Sql = string.Format(@" select FName,FCoefficient from t_measureUnit where FStandard='0' and FName='{0}' ", UnitName);
-            return DBUtil.Query(Sql, K3connectionString).Tables[0];
-        }
-
-        //采购订单明细最后更新 更新相关基础信息
-        protected POOrderEntry LastUpdateModel(POOrderEntry model)
-        {
-
-            #region   FQty数量初始化
-            DataTable dtable = MeasureUnit(model.FUnitID.ToString());
-            model.FPrice = model.FAuxPrice;
-            if (dtable.Rows.Count > 0)
-            {
-                decimal FAuxQty = Convert.ToDecimal(model.FAuxQty); //数量变更时候 要初始值
-                decimal Convertion = Convert.ToDecimal(dtable.Rows[0]["FCoefficient"].ToString());
-                model.FQty = Math.Round(FAuxQty * Convertion, 10);
-                model.FPrice= Math.Round(model.FAuxPrice * Convertion, 10);
-            }
-            else
-            {
-                model.FQty = model.FAuxQty;
-            }
-            #endregion
-            decimal Fcess = Convert.ToDecimal(100.00);
-            decimal Fcess2 = Convert.ToDecimal(100 + model.FCess) / Fcess;
-            
-            model.FAmount = Math.Round(model.FQty * model.FPrice, 2);
-            model.FTaxAmount = Math.Round(model.FAmount * Math.Round(model.FCess / Fcess, 6), 2);
-            model.FAllAmount = model.FAmount + model.FTaxAmount;
-
-
-
-            model.FAuxTaxPrice = model.FPrice + model.FPrice * Math.Round(model.FCess / Fcess, 10);
-            model.FTaxPrice = model.FAuxTaxPrice;
-
-            model.FAuxPriceDiscount = model.FAuxTaxPrice;
-            model.FPriceDiscount = model.FTaxPrice;
-
-            model.FAllAmountExceptDisCount = model.FPriceDiscount * model.FQty;
-            model.FAmountExceptDisCount = Math.Round(model.FAllAmountExceptDisCount / Fcess2, 4); 
-            return model;
         }
     }
 }

@@ -19,6 +19,9 @@ namespace JDWinService.Dal
     public class JD_SeorderApply_LogDal
     {
         public static string connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["ConnectionString"].Value; //连接信息
+        public static string K3connectionString = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["K3ConnectionString"].Value; //连接信息
+
+
         Common common = new Common();
         /// <summary>
         /// 对象JD_SeorderApply_Log明细
@@ -859,10 +862,12 @@ namespace JDWinService.Dal
             string headJson = string.Empty;
             string BodyJsonStr = string.Empty;
             string SendJson = string.Empty;
+            string FDate = string.Empty;
             DataView dv = GetDetail(TaskID);
             if (dv.Count > 0)
             {
                 JD_SeorderApply_Log model = Detail(Convert.ToInt32(dv[0]["ItemID"].ToString()));
+                FDate = model.CreateTime.ToString("yyyy-MM-dd");
                 #region Page1 解析并序列化
                 Json_SOOrder_Head headMol = helper.GetPageMol<Json_SOOrder_Head>(TaskID, APIUrl, FuncName, Token, FileType, Common.PageNum.Page1.ToString());
                  if (headMol != null)
@@ -871,7 +876,8 @@ namespace JDWinService.Dal
                     headMol.Page1.FClassTypeID = "0";
                     headMol.Page1.FHeadSelfS0140.FName = model.SeorderType;
                     headMol.Page1.FHeadSelfS0140.FNumber = model.SeorderTypeCode;
-
+                    headMol.Page1.FStatus = "1";
+                    
 
                     headMol.Page1.FCustID.FName = model.PurchaseUnit; //购货单位
                     headMol.Page1.FCustID.FNumber = model.PurchaseUnitCode;
@@ -907,15 +913,14 @@ namespace JDWinService.Dal
                     headMol.Page1.FPlanCategory.FName = model.PlanType;  //计划类别
                     headMol.Page1.FPlanCategory.FNumber = model.PlanTypeCode;
 
-                    headMol.Page1.FBillerID.FName = "Sr.Sun";
-                    headMol.Page1.FBillerID.FNumber = "Sr.Sun";
+                    headMol.Page1.FBillerID.FName = model.FBillerID;
+                    headMol.Page1.FBillerID.FNumber = model.FBillerID;
                 }
 
                 headJson = JsonConvert.SerializeObject(headMol);
                 var o = JObject.Parse(headJson);
                 headJson = o["Page1"].ToString();
-                headJson = "\"Page1\":[" + headJson + "]";
-
+                headJson = "\"Page1\":[" + headJson + "]"; 
 
                 #endregion
 
@@ -933,6 +938,7 @@ namespace JDWinService.Dal
                         model = Detail(Convert.ToInt32(dr["ItemID"]));
                         if (model != null)
                         {
+                            
                             bodyMol.Page2.FEntrySelfS0153 = model.CustomNum;
                             bodyMol.Page2.FOrderEntryID = model.CustomLineNum;
                             bodyMol.Page2.FMapName = model.Name;
@@ -992,6 +998,7 @@ namespace JDWinService.Dal
             Result result2 = common.SendToK3(loginUrl, SendJson);
             if (result2.StatusCode == "200")
             {
+                UpdateFDate(FDate, result2.Message);
                 common.WriteLogs(FileType, TaskID.ToString(), "K3集成成功!!");
                 common.AddLogQueue(TaskID, "JD_SeOrderApply_Log", 0, "API", "销售订单号：" + result2.Message, true);
                 return result2.Message;
@@ -1006,7 +1013,9 @@ namespace JDWinService.Dal
                 common.AddLogQueue(TaskID, "JD_SeOrderApply_Log", 0, "API", ErrorMsg, false);
                 return "";
             }
-            #endregion 
+            #endregion
+
+
         }
 
         protected void UpdatePO(int FInterID, int FEntryID, decimal FselQty)
@@ -1033,6 +1042,15 @@ namespace JDWinService.Dal
             }
 
 
+        }
+
+        protected void UpdateFDate(string FDate, string FbillNo)
+        {
+            if (!string.IsNullOrEmpty(FbillNo))
+            {
+                string sql = string.Format(@" update SEOrder set FDate='{0}' where FBillNo='{1}'", FDate, FbillNo);
+                DBUtil.ExecuteSql(sql, K3connectionString);
+            }
         }
 
         public DataView GetDetail(int TaskID)
@@ -1080,6 +1098,12 @@ namespace JDWinService.Dal
         public DataView GetDistinctList()
         {
             string sql = string.Format(@" select  distinct TaskID from JD_SeorderApply_Log where IsUpdate='0'");
+            return DBUtil.Query(sql).Tables[0].DefaultView;
+        }
+
+        public DataView GetUpdateInfo(string TaskID)
+        {
+            string sql = string.Format(@" select  * from JD_SeorderApply_Log where TaskID='{0}'",TaskID);
             return DBUtil.Query(sql).Tables[0].DefaultView;
         }
     }

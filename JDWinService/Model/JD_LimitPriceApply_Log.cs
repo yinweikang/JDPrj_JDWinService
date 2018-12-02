@@ -11,15 +11,19 @@ namespace JDWinService.Model
         /// <summary>
         /// 
         /// </summary>
+
+        /// <summary>
+        /// 
+        /// </summary>
         public int ItemID { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public DateTime CreateTime { get; set; }
+        public DateTime? CreateTime { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public DateTime UpdateTime { get; set; }
+        public DateTime? UpdateTime { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -112,5 +116,11 @@ namespace JDWinService.Model
         /// 
         /// </summary>
         public int ParentID { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime? EffectiveDate { get; set; }
+
+        public string PriceRemarks { get; set; }
     }
 }

@@ -26,12 +26,16 @@ namespace JDWinService.Utils
             请购单_物料 = 4,
             请购单变更 = 5,
             采购订单变更_物料 = 6,
-            采购订单变更_NPI = 7
+            采购订单变更_NPI = 7,
+            供应商流程 = 8,
+            客户新增或变更流程=9
         }
         public enum PageNum
         {
             Page1 = 0,
-            Page2 = 1
+            Page2 = 1,
+            Page3 = 2,
+            Page4 = 3
         }
         public void WriteLogs(string content)
         {
@@ -268,5 +272,61 @@ namespace JDWinService.Utils
             }
 
         }
+
+        public void AddLogQueue(string FileName, string TableName, int TableItemID, string LogType, string Message, bool Success)
+        {
+            JD_LogMngQueueDal dal = new JD_LogMngQueueDal();
+            JD_LogMngFailedDal faildal = new JD_LogMngFailedDal();
+            BPMInstTasksDal taskdal = new BPMInstTasksDal();
+            DateTime NowDate = DateTime.Now;
+
+
+            int LogQueID = dal.Add(new JD_LogMngQueue
+            {
+                TaskID = 0,
+                TableItemID = TableItemID,
+                LogTableName = TableName,
+                Message = Message,
+                CreateTime = NowDate,
+                LogType = LogType,
+                Year = NowDate.Year,
+                Month = NowDate.Month,
+                IsSuccess = (Success == true) ? 1 : 0,
+                FileName = FileName,
+                SNumber = "-"
+            });
+
+            //如果不成功 插入错误日志
+            if (!Success)
+            {
+                faildal.Add(new JD_LogMngFailed
+                {
+                    TaskID = 0,
+                    TableItemID = TableItemID,
+                    LogTableName = TableName,
+                    CreateTime = NowDate,
+                    FileName = FileName,
+                    SNumber = "-",
+                    LogQueID = LogQueID,
+                    LogType = LogType,
+                    Message = Message
+                });
+            }
+
+        }
+
+        public void AddLogQueue(int TaskID,  string TableName, int TableItemID, string LogType, string Message)
+        {
+            if (!string.IsNullOrEmpty(Message))
+            {
+                AddLogQueue(TaskID, TableName, TableItemID, LogType, Message, false);
+            }
+            else
+            {
+                AddLogQueue(TaskID, TableName, TableItemID, LogType, "操作成功！", true);
+            }
+        }
+
+
     }
 }

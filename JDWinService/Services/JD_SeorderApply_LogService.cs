@@ -26,6 +26,10 @@ namespace JDWinService.Services
         {
             return dal.GetDistinctList();
         }
+        public DataView GetUpdateInfo(string TaskID)
+        {
+            return dal.GetUpdateInfo(TaskID);
+        }
 
         public void Updateordernum(int TaskID, string ordernum)
         {
